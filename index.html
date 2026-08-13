@@ -60,7 +60,7 @@
         html=html.replace(/\s+\/\/ Demo data[\s\S]+?\n\s+await muatUI\(\);\n/,'\n            await muatUI();\n');
 
         const js=await (await fetch(patch,{cache:'no-store'})).text();
-        html=html.replace('</body>','<script>'+js+'<\\/script></body>');
+        html=html.replace('</body>','<script>'+js+'</scr'+'ipt></body>');
         document.open();
         document.write(html);
         document.close();
