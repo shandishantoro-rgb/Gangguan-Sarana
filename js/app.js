@@ -1,55 +1,489 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec";
-const ADMIN_USER = "TrainTraffic";
-const ADMIN_PASSWORD_SHA256 = "c75b445cbff8e87cf1a4432649b5b91e5002a10be8e3ba573179753ddc833959";
+(() => {
+  "use strict";
 
-const KOLOM = {id:"ID",tanggal:"Tanggal",jam:"Jam",noKa:"No KA",relasi:"Relasi",trainset:"Trainset",sf:"SF",posisi:"Posisi Kereta",lokasi:"Lokasi",kategori:"Kategori Gangguan",uraian:"Uraian Gangguan",tindakan:"Tindakan",dampak:"Dampak",telat:"Keterlambatan",dipo:"Dipo",pelapor:"Pelapor",status:"Status",dibuat:"Waktu Input"};
-const KATEGORI=["Propulsi / Traksi","Pengereman","Pintu Otomatis","Pantograf","Kelistrikan Auxiliary","Kelistrikan / Tegangan","Baterai / Charger","Bogie & Roda","Suspensi","Kopling / Coupler","Pendingin Udara","Sistem Kontrol / Monitoring","TCMS","Mikroprosesor / Kontrol","Interior & Fasilitas","Lampu","Kaca & Bodi","Pintu Kabin","Announcer / PIS","Radio / Komunikasi","Wiper","Sistem Informasi","Peralatan Keselamatan","Peralatan Darurat","Kebocoran","Asap / Bau","Overheat","Gangguan Mekanik","Gangguan Elektrik","Lain-lain"];
-const DAMPAK=["Lanjut operasi","Kecepatan dibatasi","Sarana diganti","KA batal","Masuk dipo","Masuk balai yasa"];
-const DIPO=["Depok","Bogor","Bukit Duri","Bekasi","Cikarang","Balai Yasa Manggarai"];
-let currentUser=null,userRole=null,DATA=[],sunting=null,posisiPilih=null,kategoriLainInput=null,grafikChart=null,grafikMetric="jumlah",grafikRange="7",clockStarted=false,pesanTimer;
-const $=s=>document.querySelector(s);const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
-async function sha256(text){const data=new TextEncoder().encode(text);const hash=await crypto.subtle.digest("SHA-256",data);return[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");}
-function showLogin(){$("#loginScreen").classList.remove("hidden");$("#dashboardScreen").classList.remove("visible");}
-function showDashboard(){$("#loginScreen").classList.add("hidden");$("#dashboardScreen").classList.add("visible");detakJam();if(!clockStarted){clockStarted=true;setInterval(detakJam,1000)}muat()}
-$("#roleAdmin").addEventListener("change",()=>{$("#label1").textContent="Username";$("#passwordField").style.display="block"});
-$("#roleUser").addEventListener("change",()=>{$("#label1").textContent="Nama Pengguna";$("#passwordField").style.display="none";$("#password").value=""});
-$("#loginBtn").addEventListener("click",async()=>{const role=document.querySelector('input[name="role"]:checked').value,username=$("#username").value.trim(),password=$("#password").value,errorEl=$("#loginError");errorEl.style.display="none";errorEl.textContent="";if(!username){errorEl.textContent="Silakan isi "+(role==="admin"?"username":"nama pengguna");errorEl.style.display="block";return}if(role==="admin"){const hash=await sha256(password);if(username!==ADMIN_USER||hash!==ADMIN_PASSWORD_SHA256){errorEl.textContent="Username atau password salah";errorEl.style.display="block";return}}currentUser=username;userRole=role;if($("#userRole"))$("#userRole").textContent=role==="admin"?"Admin: "+username:"User: "+username;$("#sidebarUserName").textContent=username;$("#sidebarUserRole").textContent=role==="admin"?"Admin":"User";$("#btnBaru").style.display="block";$("#btnSimpan").style.display="block";$("#btnDbCsv").style.display=role==="admin"?"inline-flex":"none";$("#btnHapus").style.display="none";$("#btnBaruDb").style.display="block";showDashboard()});
-$("#logoutBtn").addEventListener("click",()=>{currentUser=null;userRole=null;DATA=[];sunting=null;$("#username").value="";$("#password").value="";$("#roleAdmin").checked=true;$("#passwordField").style.display="block";showLogin()});
-const sidebar=$("#sidebar"),overlay=$("#sidebarOverlay");$("#menuToggle").addEventListener("click",()=>{sidebar.classList.toggle("buka");overlay.classList.toggle("buka")});overlay.addEventListener("click",()=>{sidebar.classList.remove("buka");overlay.classList.remove("buka")});
-document.querySelectorAll(".sidebar-nav .nav-item").forEach(item=>item.addEventListener("click",()=>{const view=item.dataset.view;if(!view)return;document.querySelectorAll(".sidebar-nav .nav-item").forEach(n=>n.classList.remove("aktif"));item.classList.add("aktif");document.querySelectorAll(".view").forEach(v=>v.classList.remove("aktif"));document.getElementById("view"+view.charAt(0).toUpperCase()+view.slice(1)).classList.add("aktif");sidebar.classList.remove("buka");overlay.classList.remove("buka");if(view==="database")renderDatabase();else gambar()}));
-async function apiRequest(query){const response=await fetch(API_URL+"?"+query,{cache:"no-store"});if(!response.ok)throw new Error("HTTP "+response.status);const result=await response.json();if(!result.success)throw new Error(result.error||"API error");return result}
-function metaFrom(value){try{const v=String(value||"");return v.startsWith("__META__")?JSON.parse(v.slice(8)):{};}catch{return {}}}
-function packMeta(data){return"__META__"+JSON.stringify({tindakan:data[KOLOM.tindakan]||"",telat:data[KOLOM.telat]||0,dipo:data[KOLOM.dipo]||"",pelapor:data[KOLOM.pelapor]||"",status:data[KOLOM.status]||"Terbuka",dibuat:data[KOLOM.dibuat]||new Date().toISOString()})}
-function mapApiRow(row){const meta=metaFrom(row.keterangan||row.Keterangan),rowIndex=Number(row.rowIndex||0);return{[KOLOM.id]:"gs-"+rowIndex,[KOLOM.tanggal]:row.Tanggal||"",[KOLOM.jam]:row.Jam||"",[KOLOM.noKa]:row["No KA"]||"",[KOLOM.relasi]:row.Relasi||"",[KOLOM.trainset]:row.Trainset||"",[KOLOM.sf]:row.SF||"",[KOLOM.posisi]:row["Posisi Kereta"]||"",[KOLOM.lokasi]:row.Lokasi||"",[KOLOM.kategori]:row.kategori_gangguan||row["Kategori Gangguan"]||"",[KOLOM.uraian]:row.uraian_gangguan||row["Uraian Gangguan"]||"",[KOLOM.tindakan]:meta.tindakan||"",[KOLOM.dampak]:row.dampak||row.Dampak||"",[KOLOM.telat]:meta.telat||0,[KOLOM.dipo]:meta.dipo||"",[KOLOM.pelapor]:meta.pelapor||"",[KOLOM.status]:meta.status||"Terbuka",[KOLOM.dibuat]:meta.dibuat||"",_rowIndex:rowIndex}}
-async function muatData(){const result=await apiRequest("action=read");DATA=(result.data||[]).map(mapApiRow)}
-const HARI=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"],BULAN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-function detakJam(){const d=new Date();$("#jamNow").textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,"0")).join(":");$("#tglNow").textContent=HARI[d.getDay()]+", "+d.getDate()+" "+BULAN[d.getMonth()]+" "+d.getFullYear()}
-function beritahu(teks){const p=$("#pesan");p.textContent=teks;p.classList.add("tampil");clearTimeout(pesanTimer);pesanTimer=setTimeout(()=>p.classList.remove("tampil"),2800)}
-function lolos(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
-function escapeHtml(v){return lolos(v).replace(/'/g,"&#39;")}
-function potong(v,n){v=String(v||"");return v.length>n?v.slice(0,n-1)+"…":v}
-function tglPendek(v){if(!v)return"—";const p=String(v).split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:v}
-function statusClass(st){return st==="Terbuka"?"terbuka":st==="Selesai"?"selesai":"penanganan"}
-function categoryLabel(v){const text=String(v||"");return text.toLowerCase().startsWith("lain-lain:")?"Lain-lain":text}
-function ensureCategoryOtherInput(){const select=$("#iKategori");if(!select||kategoriLainInput)return;kategoriLainInput=document.createElement("input");kategoriLainInput.id="iKategoriLain";kategoriLainInput.type="text";kategoriLainInput.maxLength=40;kategoriLainInput.placeholder="Tulis singkat, mis. lampu kabin";Object.assign(kategoriLainInput.style,{display:"none",marginTop:"5px",width:"100%",background:"#fff",border:"1px solid #C9CFD9",borderRadius:"7px",padding:"8px 11px"});select.parentElement.appendChild(kategoriLainInput);select.addEventListener("change",toggleCategoryOther)}
-function toggleCategoryOther(){if(!kategoriLainInput)return;const other=$("#iKategori").value==="Lain-lain";kategoriLainInput.style.display=other?"block":"none";if(!other)kategoriLainInput.value=""}
-function populateFormOptions(){ensureCategoryOtherInput();const kategori=$("#iKategori"),dipo=$("#iDipo"),dampak=$("#iDampak"),oldK=kategori.value,oldD=dipo.value,oldM=dampak.value;kategori.innerHTML='<option value="">Pilih kategori</option>'+KATEGORI.map(v=>'<option value="'+escapeHtml(v)+'">'+escapeHtml(v)+"</option>").join("");dipo.innerHTML='<option value="">Pilih dipo</option>'+DIPO.map(v=>'<option>'+escapeHtml(v)+"</option>").join("");dampak.innerHTML='<option value="">Pilih dampak</option>'+DAMPAK.map(v=>'<option>'+escapeHtml(v)+"</option>").join("");if([...kategori.options].some(o=>o.value===oldK))kategori.value=oldK;if([...dipo.options].some(o=>o.value===oldD))dipo.value=oldD;if([...dampak.options].some(o=>o.value===oldM))dampak.value=oldM;toggleCategoryOther()}
-function ensureCategoryForEdit(value){ensureCategoryOtherInput();const text=String(value||"");if(text.toLowerCase().startsWith("lain-lain:")){$("#iKategori").value="Lain-lain";kategoriLainInput.value=text.slice(text.indexOf(":")+1).trim()}else{$("#iKategori").value=text;kategoriLainInput.value=""}toggleCategoryOther()}
-function isiPenyaring(){const set=[...new Set(DATA.map(r=>(r[KOLOM.tanggal]||"").slice(0,7)).filter(Boolean))].sort().reverse();$("#fBulan").innerHTML='<option value="">Semua periode</option>'+set.map(b=>{const[y,m]=b.split("-");return'<option value="'+b+'">'+BULAN[+m-1]+" "+y+"</option>"}).join("");$("#fKategori").innerHTML='<option value="">Semua kategori</option>'+KATEGORI.map(v=>'<option>'+escapeHtml(v)+"</option>").join("");$("#fDipo").innerHTML='<option value="">Semua dipo</option>'+DIPO.map(v=>'<option>'+escapeHtml(v)+"</option>").join("")}
-function tersaring(){const q=$("#fCari").value.trim().toLowerCase(),bln=$("#fBulan").value,kat=$("#fKategori").value,dipo=$("#fDipo").value,st=$("#fStatus").value;return DATA.filter(r=>(!bln||(r[KOLOM.tanggal]||"").slice(0,7)===bln)&&(!kat||categoryLabel(r[KOLOM.kategori])===kat)&&(!dipo||r[KOLOM.dipo]===dipo)&&(!st||r[KOLOM.status]===st)&&(!q||Object.values(r).join(" ").toLowerCase().includes(q))).sort((a,b)=>((b[KOLOM.tanggal]||"")+" "+(b[KOLOM.jam]||"")).localeCompare((a[KOLOM.tanggal]||"")+" "+(a[KOLOM.jam]||"")))}
-function gambar(){const rows=tersaring(),belum=rows.filter(r=>r[KOLOM.status]!=="Selesai").length,menit=rows.reduce((t,r)=>t+(parseInt(r[KOLOM.telat],10)||0),0),set=new Set(rows.map(r=>r[KOLOM.trainset]).filter(Boolean)).size;$("#sTotal").textContent=rows.length;$("#sTotalSub").textContent=$("#fBulan").value?$("#fBulan").selectedOptions[0].textContent:"seluruh periode";$("#sOpen").textContent=belum;$("#sMenit").textContent=menit;$("#sSet").textContent=set;const hitung={};rows.forEach(r=>{const k=categoryLabel(r[KOLOM.kategori]||"Tanpa kategori");hitung[k]=(hitung[k]||0)+1});const urut=Object.entries(hitung).sort((a,b)=>b[1]-a[1]),maks=urut.length?urut[0][1]:1,box=$("#katList");box.innerHTML="";if(!urut.length)box.innerHTML='<div style="color:var(--redup);font-size:12.5px">Tidak ada data pada penyaring ini.</div>';else urut.forEach(([nama,n])=>{const row=el("div","kat");row.innerHTML='<div class="nm" title="'+lolos(nama)+'">'+lolos(nama)+'</div><div class="bar"><i style="width:'+Math.round(n/maks*100)+'%"></i></div><div class="n">'+n+'</div>';box.appendChild(row)});$("#tbody").innerHTML=rows.slice(0,50).map(r=>'<tr><td class="num">'+lolos(tglPendek(r[KOLOM.tanggal]))+'<br>'+lolos(r[KOLOM.jam]||"")+'</td><td class="num">'+lolos(r[KOLOM.noKa]||"—")+'</td><td class="num">'+lolos(r[KOLOM.trainset]||"—")+'</td><td>'+lolos(r[KOLOM.posisi]||"—")+'</td><td>'+lolos(r[KOLOM.lokasi]||"—")+'</td><td><div class="uraian"><b>'+lolos(categoryLabel(r[KOLOM.kategori]||"—"))+'</b>'+lolos(potong(r[KOLOM.uraian],70))+'</div></td><td>'+lolos(r[KOLOM.dampak]||"—")+'</td><td class="num">'+lolos(String(r[KOLOM.telat]||0))+"'"+'</td><td>'+lolos(r[KOLOM.dipo]||"—")+'</td><td><span class="status-badge '+statusClass(r[KOLOM.status])+'">'+lolos(r[KOLOM.status]||"Terbuka")+'</span></td></tr>').join("");$("#kosong").style.display=rows.length?"none":"block";$("#countLabel").textContent=rows.length+" rekaman";renderGrafik()}
-function initGrafik(){document.querySelectorAll(".grafik-tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".grafik-tab").forEach(x=>x.classList.remove("aktif"));b.classList.add("aktif");grafikMetric=b.id.includes("Menit")?"menit":"jumlah";renderGrafik()}));document.querySelectorAll(".grafik-range[data-range]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".grafik-range").forEach(x=>x.classList.remove("aktif"));b.classList.add("aktif");grafikRange=b.dataset.range;renderGrafik()}));$("#grafikReset").addEventListener("click",()=>{document.querySelectorAll(".grafik-range").forEach(x=>x.classList.remove("aktif"));document.querySelector('.grafik-range[data-range="7"]').classList.add("aktif");grafikRange="7";renderGrafik()})}
-function renderGrafik(){if(typeof Chart==="undefined")return;let rows=DATA.slice(),now=new Date();if(grafikRange!=="all"){const days=parseInt(grafikRange,10),from=new Date(now);from.setHours(0,0,0,0);from.setDate(from.getDate()-days+1);rows=rows.filter(r=>new Date((r[KOLOM.tanggal]||"")+"T00:00:00")>=from)}const grouped={};rows.forEach(r=>{const k=r[KOLOM.tanggal]||"Tanpa tanggal";grouped[k]=(grouped[k]||0)+(grafikMetric==="menit"?(parseInt(r[KOLOM.telat],10)||0):1)});const keys=Object.keys(grouped).sort(),vals=keys.map(k=>grouped[k]);$("#grafikPeriode").textContent=keys.length?(keys[0]===keys[keys.length-1]?tglPendek(keys[0]):tglPendek(keys[0])+"–"+tglPendek(keys[keys.length-1])):"-";$("#grafikTotal").textContent=vals.reduce((a,b)=>a+b,0);$("#grafikRata").textContent=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):"0";$("#grafikEmpty").style.display=keys.length?"none":"flex";$("#grafikCanvas").style.display=keys.length?"block":"none";if(grafikChart)grafikChart.destroy();if(!keys.length)return;grafikChart=new Chart($("#grafikCanvas"),{type:"line",data:{labels:keys.map(k=>tglPendek(k)),datasets:[{label:grafikMetric==="menit"?"Menit keterlambatan":"Jumlah gangguan",data:vals,borderColor:"#302B78",backgroundColor:"rgba(48,43,120,.08)",tension:.25,fill:true,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{grid:{display:false}}}}})}
-async function muat(){populateFormOptions();try{await muatData()}catch(e){console.error(e);beritahu("Data Google Sheets gagal dimuat: "+e.message)}isiPenyaring();gambar();renderDatabase()}
-function dbFiltered(){const q=$("#dbCari").value.trim().toLowerCase(),st=$("#dbFilterStatus").value,dp=$("#dbFilterDipo").value,kat=$("#dbFilterKategori").value;return DATA.filter(r=>(!st||r[KOLOM.status]===st)&&(!dp||r[KOLOM.dipo]===dp)&&(!kat||categoryLabel(r[KOLOM.kategori])===kat)&&(!q||Object.values(r).join(" ").toLowerCase().includes(q))).sort((a,b)=>((b[KOLOM.tanggal]||"")+" "+(b[KOLOM.jam]||"")).localeCompare((a[KOLOM.tanggal]||"")+" "+(a[KOLOM.jam]||"")))}
-function renderDatabase(){const rows=dbFiltered(),tb=$("#dbTbody");tb.innerHTML="";const total=rows.length,open=rows.filter(r=>r[KOLOM.status]!=="Selesai").length,selesai=rows.filter(r=>r[KOLOM.status]==="Selesai").length,menit=rows.reduce((t,r)=>t+(parseInt(r[KOLOM.telat],10)||0),0);$("#dbStatTotal").textContent=total;$("#dbStatOpen").textContent=open;$("#dbStatSelesai").textContent=selesai;$("#dbStatMenit").textContent=menit;$("#dbCountLabel").textContent=total+" rekaman";$("#dbKosong").hidden=rows.length>0;rows.forEach((r,i)=>{const tr=el("tr"),st=r[KOLOM.status]||"Terbuka";tr.innerHTML='<td class="num">'+(i+1)+'</td><td>'+lolos(tglPendek(r[KOLOM.tanggal]))+'</td><td>'+lolos(r[KOLOM.jam]||"")+'</td><td class="num">'+lolos(r[KOLOM.noKa]||"—")+'</td><td class="num">'+lolos(r[KOLOM.trainset]||"—")+'</td><td>'+lolos(r[KOLOM.sf]||"")+'</td><td>'+lolos(r[KOLOM.posisi]||"")+'</td><td>'+lolos(r[KOLOM.lokasi]||"—")+'</td><td>'+lolos(categoryLabel(r[KOLOM.kategori]||"—"))+'</td><td><span class="uraian-sm" title="'+lolos(r[KOLOM.uraian]||"")+'">'+lolos(potong(r[KOLOM.uraian],60))+'</span></td><td>'+lolos(r[KOLOM.dampak]||"—")+'</td><td class="num">'+lolos(String(r[KOLOM.telat]||0))+"'"+'</td><td>'+lolos(r[KOLOM.dipo]||"—")+'</td><td><span class="status-badge '+statusClass(st)+'">'+lolos(st)+'</span></td><td>'+lolos(r[KOLOM.pelapor]||"—")+'</td>';if(userRole==="admin"){tr.classList.add("clickable");tr.addEventListener("click",()=>bukaLaci(r))}tb.appendChild(tr)});const populate=(id,key,label)=>{const s=$("#"+id),values=[...new Set(DATA.map(r=>key===KOLOM.kategori?categoryLabel(r[key]):r[key]).filter(Boolean))].sort(),cur=s.value;s.innerHTML='<option value="">'+label+'</option>'+values.map(v=>'<option>'+escapeHtml(v)+"</option>").join("");if(cur)s.value=cur};populate("dbFilterDipo",KOLOM.dipo,"Semua dipo");populate("dbFilterKategori",KOLOM.kategori,"Semua kategori");document.querySelectorAll("#badgeTotal,#badgeDb").forEach(e=>e.textContent=DATA.length)}
-function unduhCSV(rows){if(!rows.length)return beritahu("Tidak ada data untuk diekspor.");const headers=["Tanggal","Jam","No KA","Relasi","Trainset","SF","Posisi","Lokasi","Kategori","Uraian","Tindakan","Dampak","Telat","Dipo","Pelapor","Status"],cols=[KOLOM.tanggal,KOLOM.jam,KOLOM.noKa,KOLOM.relasi,KOLOM.trainset,KOLOM.sf,KOLOM.posisi,KOLOM.lokasi,KOLOM.kategori,KOLOM.uraian,KOLOM.tindakan,KOLOM.dampak,KOLOM.telat,KOLOM.dipo,KOLOM.pelapor,KOLOM.status];let csv=headers.join(",")+"\n";rows.forEach(r=>{csv+=cols.map(c=>{let v=String(r[c]||"");if(v.includes(",")||v.includes('"')||v.includes("\n"))v='"'+v.replace(/"/g,'""')+'"';return v}).join(",")+"\n"});const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="gangguan_sarana_"+new Date().toISOString().slice(0,10)+".csv";link.click();URL.revokeObjectURL(link.href);beritahu("CSV berhasil diunduh.")}
-function bukaLaci(r=null){if(r&&userRole!=="admin")return beritahu("Hanya admin yang dapat mengedit.");sunting=r?r[KOLOM.id]:null;$("#laciJudul").textContent=r?"Edit laporan #"+r[KOLOM.id]:"Laporan gangguan baru";r?isiForm(r):resetForm();$("#btnHapus").style.display=r&&userRole==="admin"?"inline-flex":"none";$("#laci").classList.add("buka");$("#tirai").classList.add("buka");document.body.style.overflow="hidden"}
-function resetForm(){const now=new Date();$("#iTanggal").value=now.toISOString().slice(0,10);$("#iJam").value=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");$("#iNoKa").value="";$("#iRelasi").value="";$("#iTrainset").value="";$("#iSf").value="12";$("#iPosisi").value="";$("#iLokasi").value="";$("#iDipo").value="";$("#iKategori").value="";$("#iDampak").value="";$("#iTelat").value=0;$("#iStatus").value="Terbuka";$("#iUraian").value="";$("#iTindakan").value="";$("#iPelapor").value=currentUser||"";posisiPilih=null;ensureCategoryOtherInput();kategoriLainInput.value="";toggleCategoryOther()}
-function isiForm(r){$("#iTanggal").value=r[KOLOM.tanggal]||"";$("#iJam").value=r[KOLOM.jam]||"";$("#iNoKa").value=r[KOLOM.noKa]||"";$("#iRelasi").value=r[KOLOM.relasi]||"";$("#iTrainset").value=r[KOLOM.trainset]||"";$("#iSf").value=r[KOLOM.sf]||"12";$("#iPosisi").value=r[KOLOM.posisi]||"";$("#iLokasi").value=r[KOLOM.lokasi]||"";$("#iDipo").value=r[KOLOM.dipo]||"";$("#iDampak").value=r[KOLOM.dampak]||"";$("#iTelat").value=r[KOLOM.telat]||0;$("#iStatus").value=r[KOLOM.status]||"Terbuka";$("#iUraian").value=r[KOLOM.uraian]||"";$("#iTindakan").value=r[KOLOM.tindakan]||"";$("#iPelapor").value=r[KOLOM.pelapor]||"";ensureCategoryForEdit(r[KOLOM.kategori]||"");posisiPilih=r[KOLOM.posisi]?parseInt(r[KOLOM.posisi],10):null}
-function ambilForm(){let kategori=$("#iKategori").value;if(kategori==="Lain-lain"){const custom=(kategoriLainInput?.value||"").trim();if(!custom){beritahu("Isi kategori singkat untuk Lain-lain.");return null}kategori="Lain-lain: "+custom}return{[KOLOM.tanggal]:$("#iTanggal").value,[KOLOM.jam]:$("#iJam").value,[KOLOM.noKa]:$("#iNoKa").value.trim(),[KOLOM.relasi]:$("#iRelasi").value.trim(),[KOLOM.trainset]:$("#iTrainset").value.trim(),[KOLOM.sf]:$("#iSf").value,[KOLOM.posisi]:$("#iPosisi").value||"",[KOLOM.lokasi]:$("#iLokasi").value.trim(),[KOLOM.kategori]:kategori,[KOLOM.uraian]:$("#iUraian").value.trim(),[KOLOM.tindakan]:$("#iTindakan").value.trim(),[KOLOM.dampak]:$("#iDampak").value,[KOLOM.telat]:$("#iTelat").value||0,[KOLOM.dipo]:$("#iDipo").value,[KOLOM.pelapor]:$("#iPelapor").value.trim(),[KOLOM.status]:$("#iStatus").value}}
-function tutupLaci(){$("#laci").classList.remove("buka");$("#tirai").classList.remove("buka");document.body.style.overflow="";sunting=null}
-async function simpanLaporan(){const data=ambilForm();if(!data)return;if(!data[KOLOM.tanggal])return beritahu("Tanggal wajib diisi.");if(!data[KOLOM.noKa])return beritahu("Nomor KA wajib diisi.");if(!data[KOLOM.trainset])return beritahu("Trainset wajib diisi.");if(!data[KOLOM.kategori])return beritahu("Kategori gangguan wajib dipilih.");try{if(sunting){if(userRole!=="admin")return beritahu("Hanya admin yang dapat mengedit.");const row=DATA.find(r=>r[KOLOM.id]===sunting);if(!row)throw new Error("Data yang akan diperbarui tidak ditemukan.");const q=new URLSearchParams({action:"update",rowIndex:row._rowIndex,kategori_gangguan:data[KOLOM.kategori],uraian_gangguan:data[KOLOM.uraian],dampak:data[KOLOM.dampak],keterangan:packMeta({...data,[KOLOM.dibuat]:row[KOLOM.dibuat]||new Date().toISOString()})});await apiRequest(q.toString());beritahu("Laporan #"+sunting+" diperbarui.")}else{const q=new URLSearchParams({action:"create",tanggal:data[KOLOM.tanggal],jam:data[KOLOM.jam],no_ka:data[KOLOM.noKa],relasi:data[KOLOM.relasi],trainset:data[KOLOM.trainset],sf:data[KOLOM.sf],posisi_kereta:data[KOLOM.posisi],lokasi:data[KOLOM.lokasi],kategori_gangguan:data[KOLOM.kategori],uraian_gangguan:data[KOLOM.uraian],dampak:data[KOLOM.dampak],keterangan:packMeta({...data,[KOLOM.pelapor]:data[KOLOM.pelapor]||currentUser||""})});await apiRequest(q.toString());beritahu("Laporan baru berhasil disimpan.")}tutupLaci();await muat()}catch(e){console.error(e);beritahu("Gagal menyimpan: "+e.message)}}
-async function hapusLaporan(){if(userRole!=="admin"||!sunting)return;const row=DATA.find(r=>r[KOLOM.id]===sunting);if(!row)return;if(!confirm("Hapus laporan #"+sunting+"?"))return;try{await apiRequest("action=delete&rowIndex="+encodeURIComponent(row._rowIndex));beritahu("Laporan #"+sunting+" dihapus.");tutupLaci();await muat()}catch(e){console.error(e);beritahu("Gagal menghapus: "+e.message)}}
-function clearDb(){["#dbCari","#dbFilterStatus","#dbFilterDipo","#dbFilterKategori"].forEach((s,i)=>i===0?$(s).value="":$(s).value="");renderDatabase();beritahu("Filter direset.")}
-document.addEventListener("DOMContentLoaded",()=>{ensureCategoryOtherInput();populateFormOptions();showLogin();initGrafik();["#fCari","#fBulan","#fKategori","#fDipo","#fStatus"].forEach(s=>{$(s).addEventListener("input",gambar);$(s).addEventListener("change",gambar)});["#dbCari","#dbFilterStatus","#dbFilterDipo","#dbFilterKategori"].forEach(s=>{$(s).addEventListener("input",renderDatabase);$(s).addEventListener("change",renderDatabase)});$("#btnDbReset").addEventListener("click",clearDb);$("#btnMuat").addEventListener("click",async()=>{await muat();beritahu("Data dimuat ulang.")});$("#btnDbCsv").addEventListener("click",()=>{if(userRole!=="admin")return beritahu("Hanya admin yang dapat mengunduh CSV.");unduhCSV(dbFiltered())});$("#btnBaru").addEventListener("click",()=>bukaLaci(null));$("#btnBaruDb").addEventListener("click",()=>bukaLaci(null));$("#btnTutup").addEventListener("click",tutupLaci);$("#btnBatal").addEventListener("click",tutupLaci);$("#btnHapus").addEventListener("click",hapusLaporan);$("#tirai").addEventListener("click",tutupLaci);document.addEventListener("keydown",e=>{if(e.key==="Escape")tutupLaci()});$("#btnSimpan").addEventListener("click",simpanLaporan);const now=new Date();$("#iTanggal").value=now.toISOString().slice(0,10);$("#iJam").value=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");$("#iPelapor").placeholder="Nama / unit";muat()});
+  const API_URL = "https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec";
+  const ADMIN_USER = "TrainTraffic";
+  const ADMIN_PASSWORD_SHA256 = "c75b445cbff8e87cf1a4432649b5b91e5002a10be8e3ba573179753ddc833959";
+  const META = "__META__";
+
+  const C = {
+    tanggal: "Tanggal", jam: "Jam", noKa: "No KA", relasi: "Relasi", trainset: "Trainset",
+    sf: "SF", posisi: "Posisi Kereta", lokasi: "Lokasi", kategori: "Kategori Gangguan",
+    uraian: "Uraian Gangguan", tindakan: "Tindakan", dampak: "Dampak", telat: "Keterlambatan",
+    dipo: "Dipo", pelapor: "Pelapor", status: "Status", dibuat: "Waktu Input"
+  };
+
+  const KATEGORI = [
+    "Propulsi / Traksi", "Pengereman", "Pintu Otomatis", "Pantograf", "Kelistrikan Auxiliary",
+    "Kelistrikan / Tegangan", "Baterai / Charger", "Bogie & Roda", "Suspensi", "Kopling / Coupler",
+    "Pendingin Udara", "Sistem Kontrol / Monitoring", "TCMS", "Mikroprosesor / Kontrol",
+    "Interior & Fasilitas", "Lampu", "Kaca & Bodi", "Pintu Kabin", "Announcer / PIS",
+    "Radio / Komunikasi", "Wiper", "Sistem Informasi", "Peralatan Keselamatan", "Peralatan Darurat",
+    "Kebocoran", "Asap / Bau", "Overheat", "Gangguan Mekanik", "Gangguan Elektrik", "Lain-lain"
+  ];
+  const DAMPAK = ["Lanjut operasi", "Kecepatan dibatasi", "Sarana diganti", "KA batal", "Masuk dipo", "Masuk balai yasa"];
+  const DIPO = ["Depok", "Bogor", "Bukit Duri", "Bekasi", "Cikarang", "Balai Yasa Manggarai"];
+  const HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+  let userRole = null;
+  let currentUser = null;
+  let DATA = [];
+  let editingRow = null;
+  let selectedPosition = null;
+  let toastTimer = null;
+  let chart = null;
+  let chartMetric = "jumlah";
+  let chartRange = "7";
+
+  const $ = (id) => document.getElementById(id);
+
+  function esc(v) {
+    return String(v ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function toast(message) {
+    const el = $("pesan");
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add("tampil");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("tampil"), 2800);
+  }
+
+  async function sha256(text) {
+    const data = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return [...new Uint8Array(digest)].map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+
+  function normalizeRow(row) {
+    let meta = {};
+    try {
+      const raw = String(row.keterangan || row.Keterangan || "");
+      if (raw.startsWith(META)) meta = JSON.parse(raw.slice(META.length));
+    } catch (_) {}
+    const rowIndex = Number(row.rowIndex || 0);
+    return {
+      [C.tanggal]: row.Tanggal || "",
+      [C.jam]: row.Jam || "",
+      [C.noKa]: row["No KA"] || "",
+      [C.relasi]: row.Relasi || "",
+      [C.trainset]: row.Trainset || "",
+      [C.sf]: row.SF || "",
+      [C.posisi]: row["Posisi Kereta"] || "",
+      [C.lokasi]: row.Lokasi || "",
+      [C.kategori]: row.kategori_gangguan || row["Kategori Gangguan"] || "",
+      [C.uraian]: row.uraian_gangguan || row["Uraian Gangguan"] || "",
+      [C.tindakan]: meta.tindakan || "",
+      [C.dampak]: row.dampak || row.Dampak || "",
+      [C.telat]: meta.telat || 0,
+      [C.dipo]: meta.dipo || "",
+      [C.pelapor]: meta.pelapor || "",
+      [C.status]: meta.status || "Terbuka",
+      [C.dibuat]: meta.dibuat || "",
+      _rowIndex: rowIndex
+    };
+  }
+
+  function packMeta(data) {
+    return META + JSON.stringify({
+      tindakan: data[C.tindakan] || "",
+      telat: data[C.telat] || 0,
+      dipo: data[C.dipo] || "",
+      pelapor: data[C.pelapor] || "",
+      status: data[C.status] || "Terbuka",
+      dibuat: data[C.dibuat] || new Date().toISOString()
+    });
+  }
+
+  async function apiRead() {
+    const response = await fetch(API_URL + "?action=read", { cache: "no-store" });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || "Gagal membaca data");
+    return result.data || [];
+  }
+
+  function apiWrite(query) {
+    return fetch(API_URL + "?" + query, { mode: "no-cors", cache: "no-store" });
+  }
+
+  async function loadData() {
+    try {
+      DATA = (await apiRead()).map(normalizeRow);
+      populateFilters();
+      renderAll();
+    } catch (error) {
+      console.error(error);
+      DATA = [];
+      populateFilters();
+      renderAll();
+      toast("Data Google Sheets belum dapat dibaca: " + error.message);
+    }
+  }
+
+  function populateSelect(id, values, placeholder, selected) {
+    const select = $(id);
+    if (!select) return;
+    select.innerHTML = `<option value="">${esc(placeholder)}</option>` + values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    if (selected && values.includes(selected)) select.value = selected;
+  }
+
+  function populateFormOptions() {
+    populateSelect("iDipo", DIPO, "Pilih dipo", $("iDipo")?.value || "");
+    populateSelect("iKategori", KATEGORI, "Pilih kategori", $("iKategori")?.value || "");
+    populateSelect("iDampak", DAMPAK, "Pilih dampak", $("iDampak")?.value || "");
+    setupOtherCategory();
+  }
+
+  function setupOtherCategory() {
+    const select = $("iKategori");
+    if (!select) return;
+    if (!$("iKategoriLain")) {
+      const input = document.createElement("input");
+      input.id = "iKategoriLain";
+      input.maxLength = 50;
+      input.placeholder = "Tulis singkat, mis. lampu kabin";
+      input.style.cssText = "display:none;margin-top:6px;width:100%;padding:8px 10px;border:1px solid #C9CFD9;border-radius:7px";
+      select.parentElement.appendChild(input);
+      select.addEventListener("change", toggleOtherCategory);
+    }
+    toggleOtherCategory();
+  }
+
+  function toggleOtherCategory() {
+    const select = $("iKategori");
+    const input = $("iKategoriLain");
+    if (!select || !input) return;
+    input.style.display = select.value === "Lain-lain" ? "block" : "none";
+    if (select.value !== "Lain-lain") input.value = "";
+  }
+
+  function categoryValue() {
+    const category = $("iKategori")?.value || "";
+    if (category === "Lain-lain") {
+      const text = $("iKategoriLain")?.value.trim() || "";
+      return text ? "Lain-lain: " + text : "Lain-lain";
+    }
+    return category;
+  }
+
+  function populateFilters() {
+    const months = [...new Set(DATA.map(r => String(r[C.tanggal] || "").slice(0, 7)).filter(Boolean))].sort().reverse();
+    populateSelect("fBulan", months, "Semua periode", $("fBulan")?.value || "");
+    populateSelect("fKategori", KATEGORI, "Semua kategori", $("fKategori")?.value || "");
+    populateSelect("fDipo", DIPO, "Semua dipo", $("fDipo")?.value || "");
+    populateSelect("dbFilterDipo", [...new Set(DATA.map(r => r[C.dipo]).filter(Boolean))].sort(), "Semua dipo", $("dbFilterDipo")?.value || "");
+    populateSelect("dbFilterKategori", KATEGORI, "Semua kategori", $("dbFilterKategori")?.value || "");
+    populateFormOptions();
+  }
+
+  function categoryGroup(value) {
+    const s = String(value || "");
+    return s.toLowerCase().startsWith("lain-lain:") ? "Lain-lain" : s;
+  }
+
+  function filteredDashboard() {
+    const q = ($( "fCari")?.value || "").trim().toLowerCase();
+    const month = $("fBulan")?.value || "";
+    const category = $("fKategori")?.value || "";
+    const dipo = $("fDipo")?.value || "";
+    const status = $("fStatus")?.value || "";
+    return DATA.filter(r => {
+      if (month && String(r[C.tanggal] || "").slice(0, 7) !== month) return false;
+      if (category && categoryGroup(r[C.kategori]) !== category) return false;
+      if (dipo && r[C.dipo] !== dipo) return false;
+      if (status && r[C.status] !== status) return false;
+      if (q && !Object.values(r).join(" ").toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+
+  function filteredDatabase() {
+    const q = ($( "dbCari")?.value || "").trim().toLowerCase();
+    const status = $("dbFilterStatus")?.value || "";
+    const dipo = $("dbFilterDipo")?.value || "";
+    const category = $("dbFilterKategori")?.value || "";
+    return DATA.filter(r => {
+      if (status && r[C.status] !== status) return false;
+      if (dipo && r[C.dipo] !== dipo) return false;
+      if (category && categoryGroup(r[C.kategori]) !== category) return false;
+      if (q && !Object.values(r).join(" ").toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+
+  function shortDate(v) {
+    if (!v) return "—";
+    const p = String(v).split("-");
+    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : v;
+  }
+
+  function statusBadge(status) {
+    const cls = status === "Selesai" ? "selesai" : status === "Penanganan" ? "penanganan" : "terbuka";
+    return `<span class="status-badge ${cls}">${esc(status || "Terbuka")}</span>`;
+  }
+
+  function renderDashboard() {
+    const rows = filteredDashboard();
+    const open = rows.filter(r => r[C.status] !== "Selesai").length;
+    const minutes = rows.reduce((sum, r) => sum + (parseInt(r[C.telat], 10) || 0), 0);
+    const trainsets = new Set(rows.map(r => r[C.trainset]).filter(Boolean)).size;
+    if ($("sTotal")) $("sTotal").textContent = rows.length;
+    if ($("sOpen")) $("sOpen").textContent = open;
+    if ($("sMenit")) $("sMenit").textContent = minutes;
+    if ($("sSet")) $("sSet").textContent = trainsets;
+    if ($("countLabel")) $("countLabel").textContent = rows.length + " rekaman";
+
+    const groups = {};
+    rows.forEach(r => {
+      const key = categoryGroup(r[C.kategori]) || "Tanpa kategori";
+      groups[key] = (groups[key] || 0) + 1;
+    });
+    const sorted = Object.entries(groups).sort((a, b) => b[1] - a[1]);
+    const max = sorted[0]?.[1] || 1;
+    const list = $("katList");
+    if (list) {
+      list.innerHTML = sorted.length ? sorted.map(([name, count]) => `<div class="kat"><div class="nm">${esc(name)}</div><div class="bar"><i style="width:${Math.round(count / max * 100)}%"></i></div><div class="n">${count}</div></div>`).join("") : `<div style="color:var(--redup);font-size:12px">Tidak ada data.</div>`;
+    }
+
+    const body = $("tbody");
+    if (body) {
+      body.innerHTML = rows.slice(0, 50).map(r => `<tr>
+        <td class="num">${esc(shortDate(r[C.tanggal]))}<br>${esc(r[C.jam] || "")}</td>
+        <td>${esc(r[C.noKa] || "—")}</td><td>${esc(r[C.trainset] || "—")}</td><td>${esc(r[C.posisi] || "—")}</td>
+        <td>${esc(r[C.lokasi] || "—")}</td><td><div class="uraian"><b>${esc(categoryGroup(r[C.kategori]) || "—")}</b>${esc((r[C.uraian] || "").slice(0, 70))}</div></td>
+        <td>${esc(r[C.dampak] || "—")}</td><td class="num">${esc(r[C.telat] || 0)}'</td><td>${esc(r[C.dipo] || "—")}</td><td>${statusBadge(r[C.status])}</td>
+      </tr>`).join("");
+    }
+    renderChart(rows);
+  }
+
+  function renderDatabase() {
+    const rows = filteredDatabase();
+    if ($("dbCountLabel")) $("dbCountLabel").textContent = rows.length + " rekaman";
+    if ($("dbStatTotal")) $("dbStatTotal").textContent = rows.length;
+    if ($("dbStatOpen")) $("dbStatOpen").textContent = rows.filter(r => r[C.status] !== "Selesai").length;
+    if ($("dbStatSelesai")) $("dbStatSelesai").textContent = rows.filter(r => r[C.status] === "Selesai").length;
+    if ($("dbStatMenit")) $("dbStatMenit").textContent = rows.reduce((s, r) => s + (parseInt(r[C.telat], 10) || 0), 0);
+    const body = $("dbTbody");
+    if (!body) return;
+    body.innerHTML = rows.map((r, i) => `<tr ${userRole === "admin" ? `data-row="${i}"` : ""}>
+      <td>${i + 1}</td><td>${esc(shortDate(r[C.tanggal]))}</td><td>${esc(r[C.jam] || "")}</td><td>${esc(r[C.noKa] || "")}</td>
+      <td>${esc(r[C.trainset] || "")}</td><td>${esc(r[C.sf] || "")}</td><td>${esc(r[C.posisi] || "")}</td><td>${esc(r[C.lokasi] || "")}</td>
+      <td>${esc(categoryGroup(r[C.kategori]))}</td><td>${esc((r[C.uraian] || "").slice(0, 60))}</td><td>${esc(r[C.dampak] || "")}</td>
+      <td>${esc(r[C.telat] || 0)}'</td><td>${esc(r[C.dipo] || "")}</td><td>${statusBadge(r[C.status])}</td><td>${esc(r[C.pelapor] || "")}</td>
+    </tr>`).join("");
+    if ($("dbKosong")) $("dbKosong").hidden = rows.length > 0;
+    if (userRole === "admin") body.querySelectorAll("tr[data-row]").forEach(tr => tr.addEventListener("click", () => openForm(rows[Number(tr.dataset.row)])));
+  }
+
+  function renderChart(rows) {
+    if (typeof Chart === "undefined" || !$("grafikCanvas")) return;
+    let selected = rows.slice();
+    if (chartRange !== "all") {
+      const days = Number(chartRange);
+      const from = new Date(); from.setHours(0, 0, 0, 0); from.setDate(from.getDate() - days + 1);
+      selected = selected.filter(r => new Date((r[C.tanggal] || "") + "T00:00:00") >= from);
+    }
+    const map = {};
+    selected.forEach(r => {
+      const key = r[C.tanggal] || "Tanpa tanggal";
+      map[key] = (map[key] || 0) + (chartMetric === "menit" ? (parseInt(r[C.telat], 10) || 0) : 1);
+    });
+    const labels = Object.keys(map).sort();
+    const values = labels.map(k => map[k]);
+    if ($("grafikPeriode")) $("grafikPeriode").textContent = labels.length ? (labels.length === 1 ? shortDate(labels[0]) : shortDate(labels[0]) + "–" + shortDate(labels[labels.length - 1])) : "-";
+    if ($("grafikTotal")) $("grafikTotal").textContent = values.reduce((a, b) => a + b, 0);
+    if ($("grafikRata")) $("grafikRata").textContent = values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : "0";
+    if (chart) chart.destroy();
+    if (!labels.length) return;
+    chart = new Chart($("grafikCanvas"), { type: "line", data: { labels: labels.map(shortDate), datasets: [{ data: values, borderColor: "#302B78", backgroundColor: "rgba(48,43,120,.08)", fill: true, tension: .25 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+  }
+
+  function clock() {
+    const d = new Date();
+    if ($("jamNow")) $("jamNow").textContent = [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, "0")).join(":");
+    if ($("tglNow")) $("tglNow").textContent = `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function openForm(row = null) {
+    if (row && userRole !== "admin") return;
+    editingRow = row;
+    populateFormOptions();
+    if (row) {
+      $("laciJudul").textContent = "Edit laporan gangguan";
+      $("iTanggal").value = row[C.tanggal] || "";
+      $("iJam").value = row[C.jam] || "";
+      $("iNoKa").value = row[C.noKa] || "";
+      $("iRelasi").value = row[C.relasi] || "";
+      $("iTrainset").value = row[C.trainset] || "";
+      $("iSf").value = row[C.sf] || "12";
+      $("iLokasi").value = row[C.lokasi] || "";
+      $("iDipo").value = row[C.dipo] || "";
+      $("iDampak").value = row[C.dampak] || "";
+      $("iTelat").value = row[C.telat] || 0;
+      $("iStatus").value = row[C.status] || "Terbuka";
+      $("iPelapor").value = row[C.pelapor] || "";
+      $("iUraian").value = row[C.uraian] || "";
+      $("iTindakan").value = row[C.tindakan] || "";
+      const rawCat = row[C.kategori] || "";
+      if (rawCat.toLowerCase().startsWith("lain-lain:")) { $("iKategori").value = "Lain-lain"; setupOtherCategory(); $("iKategoriLain").value = rawCat.slice(rawCat.indexOf(":") + 1).trim(); }
+      else $("iKategori").value = rawCat;
+      selectedPosition = row[C.posisi] ? Number(row[C.posisi]) : null;
+      $("btnHapus").style.display = "inline-block";
+    } else {
+      $("laciJudul").textContent = "Laporan gangguan baru";
+      const now = new Date();
+      $("iTanggal").value = now.toISOString().slice(0, 10);
+      $("iJam").value = now.toTimeString().slice(0, 5);
+      $("iNoKa").value = ""; $("iRelasi").value = ""; $("iTrainset").value = ""; $("iSf").value = "8";
+      $("iLokasi").value = ""; $("iDipo").value = ""; $("iKategori").value = ""; $("iDampak").value = ""; $("iTelat").value = 0;
+      $("iStatus").value = "Terbuka"; $("iPelapor").value = currentUser || ""; $("iUraian").value = ""; $("iTindakan").value = "";
+      if ($("iKategoriLain")) $("iKategoriLain").value = "";
+      $("btnHapus").style.display = "none";
+      selectedPosition = null;
+    }
+    drawPositionStrip();
+    $("tirai").classList.add("buka");
+    $("laci").classList.add("buka");
+  }
+
+  function closeForm() { $("tirai")?.classList.remove("buka"); $("laci")?.classList.remove("buka"); editingRow = null; }
+
+  function drawPositionStrip() {
+    const wrap = $("stripForm");
+    if (!wrap) return;
+    const count = Number($("iSf")?.value || 8);
+    if (selectedPosition && selectedPosition > count) selectedPosition = null;
+    wrap.innerHTML = `<span class="arah">◀ 1</span>` + Array.from({ length: count }, (_, i) => i + 1).map(n => `<button type="button" class="k${n === selectedPosition ? " aktif" : ""}" data-pos="${n}">${n}</button>`).join("") + `<span class="arah">${count} ▶</span>`;
+    wrap.querySelectorAll("[data-pos]").forEach(btn => btn.addEventListener("click", () => { selectedPosition = Number(btn.dataset.pos); drawPositionStrip(); }));
+  }
+
+  function formData() {
+    return {
+      [C.tanggal]: $("iTanggal").value,
+      [C.jam]: $("iJam").value,
+      [C.noKa]: $("iNoKa").value.trim(),
+      [C.relasi]: $("iRelasi").value.trim(),
+      [C.trainset]: $("iTrainset").value.trim(),
+      [C.sf]: $("iSf").value,
+      [C.posisi]: selectedPosition ? String(selectedPosition) : "",
+      [C.lokasi]: $("iLokasi").value.trim(),
+      [C.kategori]: categoryValue(),
+      [C.uraian]: $("iUraian").value.trim(),
+      [C.tindakan]: $("iTindakan").value.trim(),
+      [C.dampak]: $("iDampak").value,
+      [C.telat]: $("iTelat").value || 0,
+      [C.dipo]: $("iDipo").value,
+      [C.pelapor]: $("iPelapor").value.trim(),
+      [C.status]: $("iStatus").value,
+      [C.dibuat]: new Date().toISOString()
+    };
+  }
+
+  function queryCreate(data) {
+    return new URLSearchParams({ action: "create", tanggal: data[C.tanggal], jam: data[C.jam], no_ka: data[C.noKa], relasi: data[C.relasi], trainset: data[C.trainset], sf: data[C.sf], posisi_kereta: data[C.posisi], lokasi: data[C.lokasi], kategori_gangguan: data[C.kategori], uraian_gangguan: data[C.uraian], dampak: data[C.dampak], keterangan: packMeta(data) }).toString();
+  }
+
+  async function saveForm() {
+    const data = formData();
+    if (!data[C.tanggal] || !data[C.noKa] || !data[C.trainset] || !data[C.kategori]) {
+      toast("Lengkapi tanggal, Nomor KA, trainset, dan kategori gangguan.");
+      return;
+    }
+    if (editingRow && userRole !== "admin") {
+      toast("User hanya dapat membuat laporan baru.");
+      return;
+    }
+    try {
+      if (editingRow) {
+        const params = new URLSearchParams({ action: "update", rowIndex: editingRow._rowIndex, kategori_gangguan: data[C.kategori], uraian_gangguan: data[C.uraian], dampak: data[C.dampak], keterangan: packMeta(data) });
+        await apiWrite(params.toString());
+      } else {
+        await apiWrite(queryCreate(data));
+      }
+      toast("Permintaan penyimpanan dikirim ke Google Sheets.");
+      closeForm();
+      setTimeout(loadData, 1200);
+    } catch (error) {
+      console.error(error);
+      toast("Gagal mengirim data: " + error.message);
+    }
+  }
+
+  async function deleteRow(row) {
+    if (userRole !== "admin" || !row?._rowIndex) return;
+    if (!confirm("Hapus laporan " + (row[C.noKa] || "") + "?")) return;
+    try {
+      await apiWrite(`action=delete&rowIndex=${encodeURIComponent(row._rowIndex)}`);
+      toast("Permintaan hapus dikirim ke Google Sheets.");
+      setTimeout(loadData, 900);
+    } catch (error) {
+      toast("Gagal menghapus data: " + error.message);
+    }
+  }
+
+  function login() {
+    const role = document.querySelector('input[name="role"]:checked')?.value || "user";
+    const username = $("username")?.value.trim();
+    const password = $("password")?.value || "";
+    const error = $("loginError");
+    if (!username) { error.textContent = "Silakan isi " + (role === "admin" ? "username" : "nama pengguna"); error.style.display = "block"; return; }
+    const proceed = () => {
+      currentUser = username; userRole = role;
+      $("userRole").textContent = (role === "admin" ? "Admin: " : "User: ") + username;
+      $("sidebarUserName").textContent = username; $("sidebarUserRole").textContent = role === "admin" ? "Admin" : "User";
+      $("btnBaru").style.display = "block"; $("btnBaruDb").style.display = "block"; $("btnSimpan").style.display = "block"; $("btnDbCsv").style.display = role === "admin" ? "inline-block" : "none";
+      $("loginScreen").classList.add("hidden"); $("dashboardScreen").classList.add("visible"); clock(); loadData();
+    };
+    error.style.display = "none";
+    if (role === "admin") sha256(password).then(hash => { if (username !== ADMIN_USER || hash !== ADMIN_PASSWORD_SHA256) { error.textContent = "Username atau password salah"; error.style.display = "block"; } else proceed(); });
+    else proceed();
+  }
+
+  function bindUI() {
+    $("loginBtn")?.addEventListener("click", login);
+    $("logoutBtn")?.addEventListener("click", () => location.reload());
+    $("roleAdmin")?.addEventListener("change", () => { $("label1").textContent = "Username"; $("passwordField").style.display = "block"; });
+    $("roleUser")?.addEventListener("change", () => { $("label1").textContent = "Nama Pengguna"; $("passwordField").style.display = "none"; });
+    $("btnBaru")?.addEventListener("click", () => openForm());
+    $("btnBaruDb")?.addEventListener("click", () => openForm());
+    $("btnTutup")?.addEventListener("click", closeForm); $("btnBatal")?.addEventListener("click", closeForm); $("tirai")?.addEventListener("click", closeForm);
+    $("btnSimpan")?.addEventListener("click", saveForm);
+    $("btnHapus")?.addEventListener("click", () => deleteRow(editingRow));
+    $("iSf")?.addEventListener("change", drawPositionStrip);
+    $("btnMuat")?.addEventListener("click", loadData);
+    ["fCari","fBulan","fKategori","fDipo","fStatus"].forEach(id => $(id)?.addEventListener("input", renderAll));
+    ["dbCari","dbFilterStatus","dbFilterDipo","dbFilterKategori"].forEach(id => $(id)?.addEventListener("input", renderDatabase));
+    $("btnDbReset")?.addEventListener("click", () => { ["dbCari","dbFilterStatus","dbFilterDipo","dbFilterKategori"].forEach(id => { if ($(id)) $(id).value = ""; }); renderDatabase(); });
+    $("menuToggle")?.addEventListener("click", () => { $("sidebar")?.classList.toggle("buka"); $("sidebarOverlay")?.classList.toggle("buka"); });
+    $("sidebarOverlay")?.addEventListener("click", () => { $("sidebar")?.classList.remove("buka"); $("sidebarOverlay")?.classList.remove("buka"); });
+    document.querySelectorAll(".sidebar-nav .nav-item").forEach(btn => btn.addEventListener("click", () => {
+      document.querySelectorAll(".sidebar-nav .nav-item").forEach(x => x.classList.remove("aktif")); btn.classList.add("aktif");
+      document.querySelectorAll(".view").forEach(x => x.classList.remove("aktif")); $("view" + btn.dataset.view.charAt(0).toUpperCase() + btn.dataset.view.slice(1))?.classList.add("aktif");
+      if (btn.dataset.view === "database") renderDatabase();
+    }));
+    ["grafikTabJumlah","grafikTabMenit"].forEach(id => $(id)?.addEventListener("click", () => { chartMetric = id === "grafikTabMenit" ? "menit" : "jumlah"; renderChart(filteredDashboard()); }));
+    document.querySelectorAll(".grafik-range[data-range]").forEach(btn => btn.addEventListener("click", () => { document.querySelectorAll(".grafik-range").forEach(x => x.classList.remove("aktif")); btn.classList.add("aktif"); chartRange = btn.dataset.range; renderChart(filteredDashboard()); }));
+    $("grafikReset")?.addEventListener("click", () => { chartRange = "7"; chartMetric = "jumlah"; document.querySelectorAll(".grafik-range").forEach(x => x.classList.remove("aktif")); document.querySelector('.grafik-range[data-range="7"]')?.classList.add("aktif"); renderChart(filteredDashboard()); });
+  }
+
+  function renderAll() { renderDashboard(); renderDatabase(); }
+
+  function boot() {
+    bindUI();
+    populateFormOptions();
+    drawPositionStrip();
+    clock();
+    setInterval(clock, 1000);
+  }
+
+  document.addEventListener("DOMContentLoaded", boot);
+})();
