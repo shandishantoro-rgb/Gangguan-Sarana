@@ -1,64 +1,65 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Papan Gangguan Sarana – KAI Commuter</title>
-  <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
-    #loading{font-family:Arial,sans-serif;padding:30px;color:#333}
-    #appFrame{display:none;width:100%;height:100%;border:0}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gangguan Sarana — KAI Commuter</title>
+<style>
+:root{--bg:#eceff1;--panel:#fff;--line:#d5d9de;--text:#263238;--muted:#68737d;--dark:#37474f;--dark2:#455a64;--danger:#b3261e;--ok:#2e7d32;--shadow:0 6px 18px rgba(0,0,0,.06)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.login{min-height:100vh;display:grid;place-items:center;padding:24px;background:#e4e7e9}.login-card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px;box-shadow:var(--shadow)}.brand{font-weight:800;font-size:24px;color:var(--dark);margin-bottom:4px}.sub{color:var(--muted);font-size:13px;margin-bottom:22px}.role{display:flex;gap:10px;margin:12px 0}.role label{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center}.field{margin-bottom:13px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #c8cdd1;border-radius:8px;background:#fff}.field textarea{min-height:90px;resize:vertical}.btn{border:1px solid #b8bec3;background:#fff;border-radius:8px;padding:9px 13px;color:var(--text)}.btn.primary{background:var(--dark);border-color:var(--dark);color:#fff}.btn.danger{background:#fff3f2;border-color:#e8b3af;color:var(--danger)}.error{color:var(--danger);font-size:12px;margin-top:10px}
+.app{min-height:100vh}.top{height:66px;background:var(--dark);color:#fff;display:flex;align-items:center;padding:0 22px;gap:16px}.top .title{font-weight:800;font-size:18px}.top .grow{flex:1}.top .user{font-size:12px;opacity:.9}.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 66px)}.side{background:#fafbfc;border-right:1px solid var(--line);padding:16px}.nav{display:grid;gap:8px}.nav button{text-align:left;background:transparent;border:0;border-radius:8px;padding:11px 12px;color:var(--muted)}.nav button.active,.nav button:hover{background:#e1e5e8;color:var(--text)}.main{padding:20px;overflow:auto}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow)}.metric .k{font-size:12px;color:var(--muted)}.metric .v{font-size:28px;font-weight:800;margin-top:4px}.section{margin-top:14px}.section-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}.section-head h2{font-size:17px;margin:0}.spacer{flex:1}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.table-wrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:10px}.table{width:100%;border-collapse:collapse;font-size:12px;min-width:1080px}.table th,.table td{padding:9px 10px;border-bottom:1px solid #e9ecef;vertical-align:top;text-align:left}.table th{background:#f5f6f7;position:sticky;top:0}.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}.badge.open{background:#ffebe9;color:var(--danger)}.badge.process{background:#fff4dc;color:#8a5a00}.badge.done{background:#e8f5e9;color:var(--ok)}.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.modal{position:fixed;inset:0;background:rgba(30,35,40,.35);display:none;align-items:flex-end;justify-content:flex-end;padding:0;z-index:50}.modal.show{display:flex}.drawer{width:min(620px,100%);height:100%;background:#fff;padding:20px;overflow:auto;box-shadow:-12px 0 30px rgba(0,0,0,.15)}.muted{color:var(--muted);font-size:12px}.empty{padding:30px;text-align:center;color:var(--muted)}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{display:none}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.grid,.form-grid{grid-template-columns:1fr}.top{padding:0 14px}.main{padding:12px}}
+</style>
 </head>
 <body>
-  <div id="loading">Memuat aplikasi...</div>
-  <iframe id="appFrame" title="Papan Gangguan Sarana"></iframe>
-  <script>
-    (async function(){
-      const BASE='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/05b47c971d18bb14e34802a75d018aab1dcb2089/index.html';
-      const OLD_API='https://script.google.com/macros/s/AKfycbwAA7Z4FnjQPllYt-_w7d6NQ7HGkVBSGHZqNlUjNNvB_B03yvAMyBhIHevd2qGoOJA/exec';
-      const NEW_API='https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec';
-      try{
-        const response=await fetch(BASE,{cache:'no-store'});
-        if(!response.ok) throw new Error('Gagal mengambil aplikasi dasar ('+response.status+')');
-        let html=await response.text();
-        html=html.replaceAll(OLD_API,NEW_API);
-
-        // User: boleh membuat laporan baru dan menyimpan laporan baru.
-        html=html.replace(
-          /if\s*\(role\s*===\s*["']admin["']\)\s*\{([\s\S]*?)\}\s*else\s*\{([\s\S]*?)\}/,
-          function(_m,adminBlock,_userBlock){
-            return 'if (role === "admin") {'+adminBlock+'} else {'+
-              '\n$("#btnBaru").style.display="block";'+
-              '\n$("#btnSimpan").style.display="block";'+
-              '\n$("#btnDbCsv").style.display="none";'+
-              '\n}';
-          }
-        );
-
-        // User tidak dapat mengedit laporan lama.
-        html=html.replace(
-          /if\s*\(userRole\s*!==\s*["']admin["']\)\s*\{\s*beritahu\(["']Hanya admin yang dapat mengedit\.["']\);\s*return;\s*\}/,
-          'if (userRole !== "admin" && r) { beritahu("User hanya dapat membuat laporan baru."); return; }'
-        );
-
-        // User dapat menyimpan laporan baru; edit tetap Admin-only.
-        html=html.replace(
-          /if\s*\(userRole\s*!==\s*["']admin["']\)\s*\{\s*beritahu\(["']Hanya admin yang dapat menyimpan\.["']\);\s*return;\s*\}/,
-          'if (userRole !== "admin" && sunting) { beritahu("User hanya dapat membuat laporan baru."); return; }'
-        );
-
-        const frame=document.getElementById('appFrame');
-        frame.addEventListener('load',function(){
-          document.getElementById('loading').style.display='none';
-          frame.style.display='block';
-        },{once:true});
-        frame.srcdoc=html;
-      }catch(error){
-        console.error(error);
-        document.getElementById('loading').textContent='Gagal memuat aplikasi: '+error.message;
-      }
-    })();
-  </script>
+<div id="login" class="login"><div class="login-card">
+  <div class="brand">KAI COMMUTER</div><div class="sub">Papan Gangguan Sarana</div>
+  <div class="role"><label><input type="radio" name="role" value="user" checked> User</label><label><input type="radio" name="role" value="admin"> Admin</label></div>
+  <div class="field"><label id="nameLabel">Nama Pengguna</label><input id="loginName" autocomplete="username"></div>
+  <div class="field hidden" id="passWrap"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password"></div>
+  <button class="btn primary" style="width:100%" id="loginBtn">Masuk</button><div id="loginErr" class="error hidden"></div>
+</div></div>
+<div id="app" class="app hidden">
+<header class="top"><div class="title">Gangguan Sarana</div><div class="grow"></div><div id="userText" class="user"></div><button class="btn" id="logoutBtn">Keluar</button></header>
+<div class="layout"><aside class="side"><div class="nav"><button class="active" data-view="dash">Dashboard</button><button data-view="data">Database</button></div></aside>
+<main class="main">
+<section id="viewDash"><div class="section-head"><h2>Ringkasan</h2><div class="spacer"></div><button class="btn primary" id="newBtn">+ Buat Laporan</button></div>
+<div class="grid"><div class="card metric"><div class="k">Total Gangguan</div><div class="v" id="mTotal">0</div></div><div class="card metric"><div class="k">Terbuka</div><div class="v" id="mOpen">0</div></div><div class="card metric"><div class="k">Penanganan</div><div class="v" id="mProcess">0</div></div><div class="card metric"><div class="k">Selesai</div><div class="v" id="mDone">0</div></div></div>
+<div class="section card"><div class="section-head"><h2>Gangguan Terbaru</h2><div class="spacer"></div><button class="btn" id="refreshBtn">Muat Ulang</button></div><div id="dashTable"></div></div></section>
+<section id="viewData" class="hidden"><div class="section-head"><h2>Database Gangguan</h2><div class="spacer"></div><button class="btn primary" id="newBtn2">+ Buat Laporan</button></div><div class="card"><div class="toolbar"><input id="search" placeholder="Cari No KA, trainset, lokasi..." style="flex:1;min-width:220px;padding:9px;border:1px solid #c8cdd1;border-radius:8px"><select id="statusFilter"><option value="">Semua status</option><option>Terbuka</option><option>Penanganan</option><option>Selesai</option></select></div><div class="section" id="dataTable"></div></div></section>
+</main></div></div>
+<div id="modal" class="modal"><aside class="drawer"><div class="section-head"><h2 id="formTitle">Laporan Baru</h2><div class="spacer"></div><button class="btn" id="closeBtn">Tutup</button></div>
+<div class="form-grid"><div class="field"><label>Tanggal</label><input type="date" id="fDate"></div><div class="field"><label>Jam</label><input type="time" id="fTime"></div><div class="field"><label>No KA</label><input id="fKa"></div><div class="field"><label>Relasi</label><input id="fRelasi"></div><div class="field"><label>Trainset</label><input id="fTrainset"></div><div class="field"><label>SF</label><select id="fSf"><option>8</option><option>10</option><option>12</option></select></div><div class="field"><label>Posisi Kereta</label><input id="fPosisi"></div><div class="field"><label>Lokasi</label><input id="fLokasi"></div><div class="field"><label>Kategori Gangguan</label><input id="fKategori"></div><div class="field"><label>Dampak</label><input id="fDampak"></div><div class="field"><label>Keterlambatan (menit)</label><input type="number" id="fTelat" min="0" value="0"></div><div class="field"><label>Dipo</label><input id="fDipo"></div><div class="field" style="grid-column:1/-1"><label>Uraian Gangguan</label><textarea id="fUraian"></textarea></div><div class="field" style="grid-column:1/-1"><label>Tindakan</label><textarea id="fTindakan"></textarea></div><div class="field"><label>Status</label><select id="fStatus"><option>Terbuka</option><option>Penanganan</option><option>Selesai</option></select></div><div class="field"><label>Pelapor</label><input id="fPelapor"></div></div>
+<div class="toolbar" style="margin-top:10px"><div class="spacer"></div><button class="btn" id="cancelBtn">Batal</button><button class="btn primary" id="saveBtn">Simpan</button></div></aside></div>
+<script>
+const API='https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec';
+const C={id:'ID',tanggal:'Tanggal',jam:'Jam',noKa:'No KA',relasi:'Relasi',trainset:'Trainset',sf:'SF',posisi:'Posisi Kereta',lokasi:'Lokasi',kategori:'Kategori Gangguan',uraian:'Uraian Gangguan',tindakan:'Tindakan',dampak:'Dampak',telat:'Keterlambatan',dipo:'Dipo',pelapor:'Pelapor',status:'Status',dibuat:'Waktu Input'};
+let role='user', userName='', data=[], editing=null;
+const $=id=>document.getElementById(id);
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function metaPack(d){return '__META__'+JSON.stringify({tindakan:d[C.tindakan]||'',telat:d[C.telat]||0,dipo:d[C.dipo]||'',pelapor:d[C.pelapor]||'',status:d[C.status]||'Terbuka',dibuat:d[C.dibuat]||new Date().toISOString()});}
+function getMeta(v){try{v=String(v||'');return v.startsWith('__META__')?JSON.parse(v.slice(8)):{};}catch{return {};}}
+function norm(r){const m=getMeta(r.keterangan||r.Keterangan);const n=Number(r.rowIndex||0);return {[C.id]:'gs-'+n,[C.tanggal]:r.Tanggal||'',[C.jam]:r.Jam||'',[C.noKa]:r['No KA']||'',[C.relasi]:r.Relasi||'',[C.trainset]:r.Trainset||'',[C.sf]:r.SF||'',[C.posisi]:r['Posisi Kereta']||'',[C.lokasi]:r.Lokasi||'',[C.kategori]:r.kategori_gangguan||r['Kategori Gangguan']||'',[C.uraian]:r.uraian_gangguan||r['Uraian Gangguan']||'',[C.tindakan]:m.tindakan||'',[C.dampak]:r.dampak||r.Dampak||'',[C.telat]:m.telat||0,[C.dipo]:m.dipo||'',[C.pelapor]:m.pelapor||'',[C.status]:m.status||'Terbuka',[C.dibuat]:m.dibuat||'',_row:n};}
+async function api(q){const r=await fetch(API+'?'+q,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(!j.success)throw new Error(j.error||'API error');return j;}
+async function loadData(){const j=await api('action=read');data=(j.data||[]).map(norm);render();}
+async function createRow(d){const q=new URLSearchParams({action:'create',tanggal:d[C.tanggal],jam:d[C.jam],no_ka:d[C.noKa],relasi:d[C.relasi],trainset:d[C.trainset],sf:d[C.sf],posisi_kereta:d[C.posisi],lokasi:d[C.lokasi],kategori_gangguan:d[C.kategori],uraian_gangguan:d[C.uraian],dampak:d[C.dampak],keterangan:metaPack(d)});await api(q.toString());}
+async function updateRow(d){const q=new URLSearchParams({action:'update',rowIndex:d._row,kategori_gangguan:d[C.kategori],uraian_gangguan:d[C.uraian],dampak:d[C.dampak],keterangan:metaPack(d)});await api(q.toString());}
+async function deleteRow(r){if(role!=='admin'||!r)return;if(!confirm('Hapus laporan No KA '+(r[C.noKa]||'')+'?'))return;await api('action=delete&rowIndex='+encodeURIComponent(r._row));await loadData();}
+function filtered(){const q=$('search')?.value.trim().toLowerCase()||'';const s=$('statusFilter')?.value||'';return data.filter(r=>{if(s&&r[C.status]!==s)return false;if(!q)return true;return [r[C.noKa],r[C.trainset],r[C.lokasi],r[C.uraian],r[C.kategori],r[C.relasi]].join(' ').toLowerCase().includes(q);}).sort((a,b)=>(b[C.tanggal]+' '+b[C.jam]).localeCompare(a[C.tanggal]+' '+a[C.jam]));}
+function badge(s){const cls=s==='Selesai'?'done':s==='Penanganan'?'process':'open';return '<span class="badge '+cls+'">'+esc(s||'Terbuka')+'</span>';}
+function tableHtml(rows, admin){if(!rows.length)return '<div class="empty">Belum ada data.</div>';return '<div class="table-wrap"><table class="table"><thead><tr><th>Tanggal</th><th>No KA</th><th>Trainset</th><th>Lokasi</th><th>Kategori</th><th>Uraian</th><th>Dampak</th><th>Telat</th><th>Status</th><th>Dipo</th><th>Pelapor</th>'+ (admin?'<th>Aksi</th>':'')+'</tr></thead><tbody>'+rows.map((r,i)=>'<tr><td>'+esc(r[C.tanggal])+'<br>'+esc(r[C.jam])+'</td><td>'+esc(r[C.noKa])+'</td><td>'+esc(r[C.trainset])+'</td><td>'+esc(r[C.lokasi])+'</td><td>'+esc(r[C.kategori])+'</td><td>'+esc(r[C.uraian])+'</td><td>'+esc(r[C.dampak])+'</td><td>'+esc(r[C.telat])+'</td><td>'+badge(r[C.status])+'</td><td>'+esc(r[C.dipo])+'</td><td>'+esc(r[C.pelapor])+'</td>'+(admin?'<td><button class="btn" onclick="editBy('+i+')">Edit</button> <button class="btn danger" onclick="delBy('+i+')">Hapus</button></td>':'')+'</tr>').join('')+'</tbody></table></div>';}
+function render(){const rows=filtered();$('mTotal').textContent=data.length;$('mOpen').textContent=data.filter(r=>r[C.status]==='Terbuka').length;$('mProcess').textContent=data.filter(r=>r[C.status]==='Penanganan').length;$('mDone').textContent=data.filter(r=>r[C.status]==='Selesai').length;$('dashTable').innerHTML=tableHtml(data.slice(0,12),role==='admin');$('dataTable').innerHTML=tableHtml(rows,role==='admin');}
+function openForm(r=null){editing=r; $('formTitle').textContent=r?'Edit Laporan':'Laporan Baru';const now=new Date();const set=(id,v)=>$(id).value=v??'';set('fDate',r?.[C.tanggal]||now.toISOString().slice(0,10));set('fTime',r?.[C.jam]||String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'));set('fKa',r?.[C.noKa]);set('fRelasi',r?.[C.relasi]);set('fTrainset',r?.[C.trainset]);set('fSf',r?.[C.sf]||'8');set('fPosisi',r?.[C.posisi]);set('fLokasi',r?.[C.lokasi]);set('fKategori',r?.[C.kategori]);set('fDampak',r?.[C.dampak]);set('fTelat',r?.[C.telat]||0);set('fDipo',r?.[C.dipo]);set('fUraian',r?.[C.uraian]);set('fTindakan',r?.[C.tindakan]);set('fStatus',r?.[C.status]||'Terbuka');set('fPelapor',r?.[C.pelapor]||userName);$('modal').classList.add('show');}
+function closeForm(){$('modal').classList.remove('show');editing=null;}
+function formData(){return {[C.tanggal]:$('fDate').value,[C.jam]:$('fTime').value,[C.noKa]:$('fKa').value.trim(),[C.relasi]:$('fRelasi').value.trim(),[C.trainset]:$('fTrainset').value.trim(),[C.sf]:$('fSf').value,[C.posisi]:$('fPosisi').value.trim(),[C.lokasi]:$('fLokasi').value.trim(),[C.kategori]:$('fKategori').value.trim(),[C.dampak]:$('fDampak').value.trim(),[C.telat]:$('fTelat').value||0,[C.dipo]:$('fDipo').value.trim(),[C.uraian]:$('fUraian').value.trim(),[C.tindakan]:$('fTindakan').value.trim(),[C.status]:$('fStatus').value,[C.pelapor]:$('fPelapor').value.trim()};}
+async function save(){const d=formData();if(!d[C.tanggal]||!d[C.noKa]||!d[C.trainset]||!d[C.kategori]){alert('Lengkapi Tanggal, No KA, Trainset, dan Kategori Gangguan.');return;}try{if(editing){if(role!=='admin'){alert('User hanya dapat membuat laporan baru.');return;}d._row=editing._row;await updateRow(d);}else{d[C.dibuat]=new Date().toISOString();await createRow(d);}await loadData();closeForm();}catch(e){alert('Gagal menyimpan: '+e.message);}}
+window.editBy=i=>openForm(data.filter(r=>true).sort((a,b)=>(b[C.tanggal]+' '+b[C.jam]).localeCompare(a[C.tanggal]+' '+a[C.jam]))[i]);window.delBy=i=>deleteRow(data.filter(r=>true).sort((a,b)=>(b[C.tanggal]+' '+b[C.jam]).localeCompare(a[C.tanggal]+' '+a[C.jam]))[i]);
+function switchView(v){$('viewDash').classList.toggle('hidden',v!=='dash');$('viewData').classList.toggle('hidden',v!=='data');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));if(v==='data')render();}
+$('roleAdmin').onchange=()=>{};
+document.querySelectorAll('input[name="role"]').forEach(r=>r.addEventListener('change',()=>{const a=document.querySelector('input[name="role"]:checked').value==='admin';$('passWrap').classList.toggle('hidden',!a);$('nameLabel').textContent=a?'Username':'Nama Pengguna';}));
+$('loginBtn').onclick=()=>{const r=document.querySelector('input[name="role"]:checked').value,n=$('loginName').value.trim(),p=$('loginPass').value;if(!n){$('loginErr').textContent='Isi nama pengguna.';$('loginErr').classList.remove('hidden');return;}if(r==='admin'&&(n!=='TrainTraffic'||p!=='Traffic123')){$('loginErr').textContent='Username atau password salah.';$('loginErr').classList.remove('hidden');return;}role=r;userName=n;$('loginErr').classList.add('hidden');$('login').classList.add('hidden');$('app').classList.remove('hidden');$('userText').textContent=(r==='admin'?'Admin: ':'User: ')+n;loadData().catch(e=>alert('Gagal memuat data: '+e.message));};
+$('logoutBtn').onclick=()=>location.reload();$('newBtn').onclick=()=>openForm();$('newBtn2').onclick=()=>openForm();$('refreshBtn').onclick=()=>loadData();$('closeBtn').onclick=closeForm;$('cancelBtn').onclick=closeForm;$('saveBtn').onclick=save;$('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
+</script>
 </body>
 </html>
