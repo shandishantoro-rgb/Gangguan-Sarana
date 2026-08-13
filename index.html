@@ -8,10 +8,11 @@
   const base='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/7bd7aa100e0b82bde718e97a69d0f04c90824914/index.html';
   const patch='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/main/patch.js';
   try{
-    const html=await (await fetch(base,{cache:'no-store'})).text();
+    let html=await (await fetch(base,{cache:'no-store'})).text();
+    html=html.replace('document.addEventListener("DOMContentLoaded", () => {','document.addEventListener("DOMContentLoaded", async () => {');
+    html=html.replace(/\s*\/\/ Demo data[\s\S]*?\n\s*muat\(\);\n\s*\}\);/, '\n            await muat();\n        });');
     const js=await (await fetch(patch,{cache:'no-store'})).text();
-    const merged=html.replace('</body>','<script>'+js+'</script></body>');
-    document.open();document.write(merged);document.close();
+    document.open();document.write(html.replace('</body>','<script>'+js+'</script></body>'));document.close();
   }catch(e){document.getElementById('loading').textContent='Gagal memuat aplikasi: '+e.message;}
 })();
 </script>
