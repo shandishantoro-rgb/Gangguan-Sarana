@@ -9,6 +9,7 @@
       const patch='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/main/patch.js';
       try{
         let html=await (await fetch(base,{cache:'no-store'})).text();
+        html=html.replace('AKfycbwAA7Z4FnjQPllYt-_w7d6NQ7HGkVBSGHZqNlUjNNvB_B03yvAMyBhIHevd2qGoOJA','AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm');
         html=html.replace('document.addEventListener("DOMContentLoaded", () => {',' document.addEventListener("DOMContentLoaded", async () => {');
         html=html.replace(/\s+\/\/ Demo data[\s\S]+?\n\s+await muatUI\(\);\n/,'\n                      await muatUI();\n');
         const js=await (await fetch(patch,{cache:'no-store'})).text();
