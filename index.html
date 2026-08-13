@@ -61,25 +61,7 @@
           'if(userRole!=="admin" && sunting){beritahu("User hanya dapat membuat laporan baru.");return;}'
         );
 
-        const enforceUserButtons = `
-<script>
-(function enforceReportActions(){
-  const timer=setInterval(function(){
-    const roleLabel=document.querySelector('#sidebarUserRole');
-    const btnBaru=document.querySelector('#btnBaru');
-    const btnSimpan=document.querySelector('#btnSimpan');
-    if(!roleLabel||!btnBaru||!btnSimpan) return;
-    const role=(roleLabel.textContent||'').trim().toLowerCase();
-    if(role==='user'){
-      btnBaru.style.display='block';
-      btnSimpan.style.display='block';
-    }
-  },250);
-  setTimeout(function(){clearInterval(timer);},1800000);
-})();
-</script>`;
-
-        html=html.replace('</body>', '<script>'+js+'</scr'+'ipt>'+enforceUserButtons+'</body>');
+        html=html.replace('</body>', '<script>'+js+'</scr'+'ipt></body>');
         document.open();
         document.write(html);
         document.close();
