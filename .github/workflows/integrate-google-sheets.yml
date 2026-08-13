@@ -1,0 +1,104 @@
+name: Integrate Google Sheets CRUD
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  integrate:
+    if: github.event.head_commit.message != 'Integrate Google Sheets CRUD'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          api='''
+          /* ===== GOOGLE SHEETS API ===== */
+          const API_URL = "https://script.google.com/macros/s/AKfycbwAA7Z4FnjQPllYt-_w7d6NQ7HGkVBSGHZqNlUjNNvB_B03yvAMyBhIHevd2qGoOJA/exec";
+          const META_PREFIX = "__META__";
+          function simpanData(){ return true; }
+          function parseMeta(v){ try { const t=String(v||""); return t.startsWith(META_PREFIX)?JSON.parse(t.slice(META_PREFIX.length)):{}; } catch(e){ return {}; } }
+          function buildMeta(d){ return META_PREFIX+JSON.stringify({tindakan:d[KOLOM.tindakan]||"",telat:d[KOLOM.telat]||0,dipo:d[KOLOM.dipo]||"",pelapor:d[KOLOM.pelapor]||"",status:d[KOLOM.status]||"Terbuka",dibuat:d[KOLOM.dibuat]||new Date().toISOString()}); }
+          function normalizeApiRow(r){ const m=parseMeta(r.keterangan||r.Keterangan||""); const n=Number(r.rowIndex||0); return {[KOLOM.id]:"gs-"+n,[KOLOM.tanggal]:r["Tanggal"]||"",[KOLOM.jam]:r["Jam"]||"",[KOLOM.noKa]:r["No KA"]||"",[KOLOM.relasi]:r["Relasi"]||"",[KOLOM.trainset]:r["Trainset"]||"",[KOLOM.sf]:r["SF"]||"",[KOLOM.posisi]:r["Posisi Kereta"]||"",[KOLOM.lokasi]:r["Lokasi"]||"",[KOLOM.kategori]:r.kategori_gangguan||r["Kategori Gangguan"]||"",[KOLOM.uraian]:r.uraian_gangguan||r["Uraian Gangguan"]||"",[KOLOM.tindakan]:m.tindakan||"",[KOLOM.dampak]:r.dampak||r["Dampak"]||"",[KOLOM.telat]:m.telat||0,[KOLOM.dipo]:m.dipo||"",[KOLOM.pelapor]:m.pelapor||"",[KOLOM.status]:m.status||"Terbuka",[KOLOM.dibuat]:m.dibuat||"",_apiRowIndex:n}; }
+          async function muatData(){ try{ const r=await fetch(API_URL+"?action=read",{cache:"no-store"}); const j=await r.json(); if(!j.success) throw Error(j.error||"API gagal membaca data"); DATA=Array.isArray(j.data)?j.data.map(normalizeApiRow):[]; return true; }catch(e){ console.error(e); DATA=[]; beritahu("Gagal memuat data Google Sheets."); return false; } }
+          async function apiCreate(d){ const q=new URLSearchParams({action:"create",tanggal:d[KOLOM.tanggal]||"",jam:d[KOLOM.jam]||"",no_ka:d[KOLOM.noKa]||"",relasi:d[KOLOM.relasi]||"",trainset:d[KOLOM.trainset]||"",sf:d[KOLOM.sf]||"",posisi_kereta:d[KOLOM.posisi]||"",lokasi:d[KOLOM.lokasi]||"",kategori_gangguan:d[KOLOM.kategori]||"",uraian_gangguan:d[KOLOM.uraian]||"",dampak:d[KOLOM.dampak]||"",keterangan:buildMeta(d)}); const j=await (await fetch(API_URL+"?"+q)).json(); if(!j.success) throw Error(j.error||"Gagal menambah data"); return j; }
+          async function apiUpdate(n,d){ const q=new URLSearchParams({action:"update",rowIndex:String(n),kategori_gangguan:d[KOLOM.kategori]||"",uraian_gangguan:d[KOLOM.uraian]||"",dampak:d[KOLOM.dampak]||"",keterangan:buildMeta(d)}); const j=await (await fetch(API_URL+"?"+q)).json(); if(!j.success) throw Error(j.error||"Gagal memperbarui data"); return j; }
+          async function apiDelete(n){ const j=await (await fetch(API_URL+"?action=delete&rowIndex="+encodeURIComponent(n))).json(); if(!j.success) throw Error(j.error||"Gagal menghapus data"); return j; }
+          '''
+          marker='        let posisiPilih = null;'
+          if 'GOOGLE SHEETS API' not in s:
+              s=s.replace(marker,marker+'\n'+api,1)
+          old_start=s.index('        /* ===== SIMPAN LAPORAN ===== */')
+          old_end=s.index('        /* ===== DATABASE VIEW ===== */',old_start)
+          save='''        /* ===== SIMPAN LAPORAN ===== */
+          async function simpanLaporan(){
+            if(userRole!=="admin"){beritahu("Hanya admin yang dapat menyimpan.");return;}
+            const data=ambilForm();
+            if(!data[KOLOM.tanggal]||!data[KOLOM.noKa]||!data[KOLOM.trainset]||!data[KOLOM.kategori]){beritahu("Lengkapi Tanggal, Nomor KA, Trainset, dan Kategori gangguan.");return;}
+            const b=$("#btnSimpan"); b.disabled=true;
+            try{ if(sunting){const r=DATA.find(x=>x[KOLOM.id]===sunting); if(!r||!r._apiRowIndex) throw Error("Baris Google Sheets tidak ditemukan."); await apiUpdate(r._apiRowIndex,data); beritahu("Laporan diperbarui di Google Sheets.");}
+            else{data[KOLOM.dibuat]=new Date().toISOString(); await apiCreate(data); beritahu("Laporan berhasil disimpan ke Google Sheets.");}
+            await muatData(); tutupLaci(); isiPenyaring(); gambar(); renderDatabase();}catch(e){console.error(e);beritahu(e.message||"Gagal menyimpan data.");}finally{b.disabled=false;}
+          }
+          async function hapusLaporan(r){
+            if(userRole!=="admin"){beritahu("Hanya admin yang dapat menghapus.");return;}
+            if(!r||!r._apiRowIndex){beritahu("Baris Google Sheets tidak ditemukan.");return;}
+            if(!confirm("Hapus laporan "+(r[KOLOM.noKa]||"")+" / "+(r[KOLOM.trainset]||"")+" dari Google Sheets?\\n\\nData akan dihapus permanen."))return;
+            try{await apiDelete(r._apiRowIndex);await muatData();isiPenyaring();gambar();renderDatabase();beritahu("Laporan berhasil dihapus dari Google Sheets.");}catch(e){console.error(e);beritahu(e.message||"Gagal menghapus data.");}
+          }
+          '''
+          s=s[:old_start]+save+s[old_end:]
+          # Add action buttons to database rows.
+          needle='''              <td>${lolos(r[KOLOM.pelapor]||"—")}</td>
+            `;'''
+          repl='''              <td>${lolos(r[KOLOM.pelapor]||"—")}</td>
+              <td class="aksi-db">${userRole==="admin"?`<button type="button" class="btn btn-edit-db">Edit</button><button type="button" class="btn btn-delete-db">Hapus</button>`:"—"}</td>
+            `;'''
+          if needle in s: s=s.replace(needle,repl,1)
+          old='''                if (userRole === "admin") {
+                    tr.classList.add("clickable");
+                    tr.addEventListener("click", () => bukaLaci(r));
+                }
+                tb.appendChild(tr);'''
+          new='''                if (userRole === "admin") {
+                    tr.classList.add("clickable");
+                    tr.addEventListener("click", () => bukaLaci(r));
+                    const be=tr.querySelector(".btn-edit-db"); const bd=tr.querySelector(".btn-delete-db");
+                    if(be) be.addEventListener("click",e=>{e.stopPropagation();bukaLaci(r);});
+                    if(bd) bd.addEventListener("click",e=>{e.stopPropagation();hapusLaporan(r);});
+                }
+                tb.appendChild(tr);'''
+          if old in s: s=s.replace(old,new,1)
+          # Replace muat() with async API load.
+          old='''        function muat() {
+            muatData();'''
+          new='''        async function muat() {
+            await muatData();'''
+          s=s.replace(old,new,1)
+          s=s.replace('''            $("#btnMuat").addEventListener("click", () => { muat();
+                beritahu("Data dimuat ulang."); });''','''            $("#btnMuat").addEventListener("click", async () => { await muat(); beritahu("Data Google Sheets dimuat ulang."); });''',1)
+          # Remove demo-data insertion and load API once on startup.
+          demo_start=s.find('            // Demo data')
+          if demo_start!=-1:
+              demo_end=s.find('            muat();\n        });',demo_start)
+              if demo_end!=-1:
+                  s=s[:demo_start]+'            await muat();\n        });'+s[demo_end+len('            muat();\n        });'):]
+          s=s.replace('        document.addEventListener("DOMContentLoaded", () => {','        document.addEventListener("DOMContentLoaded", async () => {',1)
+          # Make action buttons visible.
+          css='''\n        .aksi-db{white-space:nowrap}.aksi-db .btn{padding:5px 8px;margin-right:4px;font-size:11px}.aksi-db .btn-edit-db{color:var(--biru);border:1px solid var(--biru);background:#fff}.aksi-db .btn-delete-db{color:var(--merah);border:1px solid var(--merah);background:#fff}\n'''
+          if '.btn-delete-db' not in s:
+              s=s.replace('    </style>',css+'    </style>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patched file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Integrate Google Sheets CRUD"
+          git push
