@@ -4,56 +4,59 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Papan Gangguan Sarana – KAI Commuter</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
+    #loading{font-family:Arial,sans-serif;padding:30px;color:#333}
+    #appFrame{display:none;width:100%;height:100%;border:0}
+  </style>
 </head>
 <body>
-  <div id="loading" style="font-family:Arial,sans-serif;padding:30px">Memuat aplikasi...</div>
+  <div id="loading">Memuat aplikasi...</div>
+  <iframe id="appFrame" title="Papan Gangguan Sarana"></iframe>
   <script>
-    (async function () {
-      const BASE = 'https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/05b47c971d18bb14e34802a75d018aab1dcb2089/index.html';
-      const OLD_API = 'https://script.google.com/macros/s/AKfycbwAA7Z4FnjQPllYt-_w7d6NQ7HGkVBSGHZqNlUjNNvB_B03yvAMyBhIHevd2qGoOJA/exec';
-      const NEW_API = 'https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec';
+    (async function(){
+      const BASE='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/05b47c971d18bb14e34802a75d018aab1dcb2089/index.html';
+      const OLD_API='https://script.google.com/macros/s/AKfycbwAA7Z4FnjQPllYt-_w7d6NQ7HGkVBSGHZqNlUjNNvB_B03yvAMyBhIHevd2qGoOJA/exec';
+      const NEW_API='https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec';
+      try{
+        const response=await fetch(BASE,{cache:'no-store'});
+        if(!response.ok) throw new Error('Gagal mengambil aplikasi dasar ('+response.status+')');
+        let html=await response.text();
+        html=html.replaceAll(OLD_API,NEW_API);
 
-      try {
-        const response = await fetch(BASE, { cache: 'no-store' });
-        if (!response.ok) throw new Error('Gagal mengambil aplikasi dasar (' + response.status + ')');
-
-        let html = await response.text();
-        html = html.replaceAll(OLD_API, NEW_API);
-
-        // Role User: boleh membuat laporan baru dan menyimpan laporan baru.
-        html = html.replace(
+        // User: boleh membuat laporan baru dan menyimpan laporan baru.
+        html=html.replace(
           /if\s*\(role\s*===\s*["']admin["']\)\s*\{([\s\S]*?)\}\s*else\s*\{([\s\S]*?)\}/,
-          function (_m, adminBlock, _userBlock) {
-            return 'if (role === "admin") {' + adminBlock + '} else {' +
-              '\n                $("#btnBaru").style.display = "block";' +
-              '\n                $("#btnSimpan").style.display = "block";' +
-              '\n                $("#btnDbCsv").style.display = "none";' +
-              '\n            }';
+          function(_m,adminBlock,_userBlock){
+            return 'if (role === "admin") {'+adminBlock+'} else {'+
+              '\n$("#btnBaru").style.display="block";'+
+              '\n$("#btnSimpan").style.display="block";'+
+              '\n$("#btnDbCsv").style.display="none";'+
+              '\n}';
           }
         );
 
-        // User tidak boleh mengedit laporan lama, tetapi boleh membuka form kosong.
-        html = html.replace(
+        // User tidak dapat mengedit laporan lama.
+        html=html.replace(
           /if\s*\(userRole\s*!==\s*["']admin["']\)\s*\{\s*beritahu\(["']Hanya admin yang dapat mengedit\.["']\);\s*return;\s*\}/,
           'if (userRole !== "admin" && r) { beritahu("User hanya dapat membuat laporan baru."); return; }'
         );
 
-        // User boleh menyimpan laporan baru. Admin tetap dapat menyimpan/edit.
-        html = html.replace(
+        // User dapat menyimpan laporan baru; edit tetap Admin-only.
+        html=html.replace(
           /if\s*\(userRole\s*!==\s*["']admin["']\)\s*\{\s*beritahu\(["']Hanya admin yang dapat menyimpan\.["']\);\s*return;\s*\}/,
           'if (userRole !== "admin" && sunting) { beritahu("User hanya dapat membuat laporan baru."); return; }'
         );
 
-        // Hindari literal </script> di JavaScript parent.
-        const safeHtml = html.replace(/<\\/script/gi, '<\\/scr' + 'ipt');
-
-        document.open();
-        document.write(safeHtml);
-        document.close();
-      } catch (error) {
+        const frame=document.getElementById('appFrame');
+        frame.addEventListener('load',function(){
+          document.getElementById('loading').style.display='none';
+          frame.style.display='block';
+        },{once:true});
+        frame.srcdoc=html;
+      }catch(error){
         console.error(error);
-        const loading = document.getElementById('loading');
-        loading.textContent = 'Gagal memuat aplikasi: ' + error.message;
+        document.getElementById('loading').textContent='Gagal memuat aplikasi: '+error.message;
       }
     })();
   </script>
