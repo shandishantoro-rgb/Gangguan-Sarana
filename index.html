@@ -8,66 +8,40 @@
 <body>
   <div id="loading" style="font-family:Arial,sans-serif;padding:30px">Memuat aplikasi...</div>
   <script>
-    (async()=>{
-      const base='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/05b47c971d18bb14e34802a75d018aab1dcb2089/index.html';
-      const patch='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/main/patch.js';
-      const OLD_API='https://script.google.com/macros/s/AKfycbwAA7Z4FnjQPllYt-_w7d6NQ7HGkVBSGHZqNlUjNNvB_B03yvAMyBhIHevd2qGoOJA/exec';
-      const NEW_API='https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec';
-      try{
-        let html=await (await fetch(base,{cache:'no-store'})).text();
-        html=html.replaceAll(OLD_API,NEW_API);
+    (async function () {
+      const BASE = 'https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/05b47c971d18bb14e34802a75d018aab1dcb2089/index.html';
+      const OLD_API = 'https://script.google.com/macros/s/AKfycbwAA7Z4FnjQPllYt-_w7d6NQ7HGkVBSGHZqNlUjNNvB_B03yvAMyBhIHevd2qGoOJA/exec';
+      const NEW_API = 'https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec';
 
-        html=html.replace(
-          `if (role === "admin") {
-                $("#btnBaru").style.display = "block";
-                $("#btnSimpan").style.display = "block";
-                $("#btnDbCsv").style.display = "inline-flex";
-            } else {
-                $("#btnBaru").style.display = "none";
-                $("#btnSimpan").style.display = "none";
-                $("#btnDbCsv").style.display = "none";
-            }`,
-          `if (role === "admin") {
-                $("#btnBaru").style.display = "block";
-                $("#btnSimpan").style.display = "block";
-                $("#btnDbCsv").style.display = "inline-flex";
-            } else {
-                $("#btnBaru").style.display = "block";
-                $("#btnSimpan").style.display = "block";
-                $("#btnDbCsv").style.display = "none";
-            }`
+      try {
+        let html = await (await fetch(BASE, { cache: 'no-store' })).text();
+        html = html.replaceAll(OLD_API, NEW_API);
+
+        // Tampilkan tombol Buat Laporan dan Simpan untuk User juga.
+        html = html.replace(
+          'showDashboard();',
+          'if (role === "user") { $("#btnBaru").style.display = "block"; $("#btnSimpan").style.display = "block"; }\n            showDashboard();'
         );
 
-        html=html.replace(
-          `if (userRole !== "admin") { beritahu("Hanya admin yang dapat mengedit."); return; }
-            sunting = r ? r[KOLOM.id] : null;`,
-          `if (userRole !== "admin" && r) { beritahu("User hanya dapat membuat laporan baru."); return; }
-            sunting = r ? r[KOLOM.id] : null;`
+        // User boleh membuka form kosong, tetapi tidak boleh mengedit laporan lama.
+        html = html.replace(
+          /if\s*\(userRole\s*!==\s*"admin"\)\s*\{\s*beritahu\("Hanya admin yang dapat mengedit\."\);\s*return;\s*\}/,
+          'if (userRole !== "admin" && r) { beritahu("User hanya dapat membuat laporan baru."); return; }'
         );
 
-        html=html.replace(
-          `if(userRole!=="admin"){beritahu("Hanya admin yang dapat menyimpan.");return;}
-  const data=ambilForm();`,
-          `if(userRole!=="admin" && sunting){beritahu("User hanya dapat membuat laporan baru.");return;}
-  const data=ambilForm();`
+        // User boleh menyimpan laporan baru; edit tetap Admin-only.
+        html = html.replace(
+          /if\s*\(userRole\s*!==\s*"admin"\)\s*\{\s*beritahu\("Hanya admin yang dapat menyimpan\."\);\s*return;\s*\}/,
+          'if (userRole !== "admin" && sunting) { beritahu("User hanya dapat membuat laporan baru."); return; }'
         );
 
-        html=html.replace('document.addEventListener("DOMContentLoaded", () => {','document.addEventListener("DOMContentLoaded", async () => {');
-        html=html.replace(/\s+\/\/ Demo data[\s\S]+?\n\s+await muatUI\(\);\n/,'\n            await muatUI();\n');
-
-        let js=await (await fetch(patch,{cache:'no-store'})).text();
-        js=js.replace(
-          'if(userRole!=="admin"){beritahu("Hanya admin yang dapat menyimpan.");return;}',
-          'if(userRole!=="admin" && sunting){beritahu("User hanya dapat membuat laporan baru.");return;}'
-        );
-
-        html=html.replace('</body>', '<script>'+js+'</scr'+'ipt></body>');
+        // Jangan injeksi patch.js. Aplikasi full dari commit 05b47 sudah memiliki CRUD.
         document.open();
         document.write(html);
         document.close();
-      }catch(e){
+      } catch (e) {
         console.error(e);
-        document.getElementById('loading').textContent='Gagal memuat aplikasi: '+e.message;
+        document.getElementById('loading').textContent = 'Gagal memuat aplikasi: ' + e.message;
       }
     })();
   </script>
