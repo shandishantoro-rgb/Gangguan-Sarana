@@ -1230,6 +1230,8 @@
                 font-size: 11px;
             }
         }
+
+        .aksi-db{white-space:nowrap}.aksi-db .btn{padding:5px 8px;margin-right:4px;font-size:11px}.aksi-db .btn-edit-db{color:var(--biru);border:1px solid var(--biru);background:#fff}.aksi-db .btn-delete-db{color:var(--merah);border:1px solid var(--merah);background:#fff}
     </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
@@ -1667,6 +1669,19 @@
         let sunting = null;
         let posisiPilih = null;
 
+/* ===== GOOGLE SHEETS API ===== */
+const API_URL = "https://script.google.com/macros/s/AKfycbwAA7Z4FnjQPllYt-_w7d6NQ7HGkVBSGHZqNlUjNNvB_B03yvAMyBhIHevd2qGoOJA/exec";
+const META_PREFIX = "__META__";
+function simpanData(){ return true; }
+function parseMeta(v){ try { const t=String(v||""); return t.startsWith(META_PREFIX)?JSON.parse(t.slice(META_PREFIX.length)):{}; } catch(e){ return {}; } }
+function buildMeta(d){ return META_PREFIX+JSON.stringify({tindakan:d[KOLOM.tindakan]||"",telat:d[KOLOM.telat]||0,dipo:d[KOLOM.dipo]||"",pelapor:d[KOLOM.pelapor]||"",status:d[KOLOM.status]||"Terbuka",dibuat:d[KOLOM.dibuat]||new Date().toISOString()}); }
+function normalizeApiRow(r){ const m=parseMeta(r.keterangan||r.Keterangan||""); const n=Number(r.rowIndex||0); return {[KOLOM.id]:"gs-"+n,[KOLOM.tanggal]:r["Tanggal"]||"",[KOLOM.jam]:r["Jam"]||"",[KOLOM.noKa]:r["No KA"]||"",[KOLOM.relasi]:r["Relasi"]||"",[KOLOM.trainset]:r["Trainset"]||"",[KOLOM.sf]:r["SF"]||"",[KOLOM.posisi]:r["Posisi Kereta"]||"",[KOLOM.lokasi]:r["Lokasi"]||"",[KOLOM.kategori]:r.kategori_gangguan||r["Kategori Gangguan"]||"",[KOLOM.uraian]:r.uraian_gangguan||r["Uraian Gangguan"]||"",[KOLOM.tindakan]:m.tindakan||"",[KOLOM.dampak]:r.dampak||r["Dampak"]||"",[KOLOM.telat]:m.telat||0,[KOLOM.dipo]:m.dipo||"",[KOLOM.pelapor]:m.pelapor||"",[KOLOM.status]:m.status||"Terbuka",[KOLOM.dibuat]:m.dibuat||"",_apiRowIndex:n}; }
+async function muatData(){ try{ const r=await fetch(API_URL+"?action=read",{cache:"no-store"}); const j=await r.json(); if(!j.success) throw Error(j.error||"API gagal membaca data"); DATA=Array.isArray(j.data)?j.data.map(normalizeApiRow):[]; return true; }catch(e){ console.error(e); DATA=[]; beritahu("Gagal memuat data Google Sheets."); return false; } }
+async function apiCreate(d){ const q=new URLSearchParams({action:"create",tanggal:d[KOLOM.tanggal]||"",jam:d[KOLOM.jam]||"",no_ka:d[KOLOM.noKa]||"",relasi:d[KOLOM.relasi]||"",trainset:d[KOLOM.trainset]||"",sf:d[KOLOM.sf]||"",posisi_kereta:d[KOLOM.posisi]||"",lokasi:d[KOLOM.lokasi]||"",kategori_gangguan:d[KOLOM.kategori]||"",uraian_gangguan:d[KOLOM.uraian]||"",dampak:d[KOLOM.dampak]||"",keterangan:buildMeta(d)}); const j=await (await fetch(API_URL+"?"+q)).json(); if(!j.success) throw Error(j.error||"Gagal menambah data"); return j; }
+async function apiUpdate(n,d){ const q=new URLSearchParams({action:"update",rowIndex:String(n),kategori_gangguan:d[KOLOM.kategori]||"",uraian_gangguan:d[KOLOM.uraian]||"",dampak:d[KOLOM.dampak]||"",keterangan:buildMeta(d)}); const j=await (await fetch(API_URL+"?"+q)).json(); if(!j.success) throw Error(j.error||"Gagal memperbarui data"); return j; }
+async function apiDelete(n){ const j=await (await fetch(API_URL+"?action=delete&rowIndex="+encodeURIComponent(n))).json(); if(!j.success) throw Error(j.error||"Gagal menghapus data"); return j; }
+
+
         function simpanData() {
             localStorage.setItem("papanData", JSON.stringify(DATA));
         }
@@ -1969,34 +1984,21 @@
         }
 
         /* ===== SIMPAN LAPORAN ===== */
-        function simpanLaporan() {
-            if (userRole !== "admin") { beritahu("Hanya admin yang dapat menyimpan."); return; }
-            const data = ambilForm();
-            if (!data[KOLOM.tanggal]) { beritahu("Tanggal wajib diisi."); return; }
-            if (!data[KOLOM.noKa]) { beritahu("Nomor KA wajib diisi."); return; }
-            if (!data[KOLOM.trainset]) { beritahu("Trainset wajib diisi."); return; }
-            if (!data[KOLOM.kategori]) { beritahu("Kategori gangguan wajib dipilih."); return; }
-
-            if (sunting) {
-                const idx = DATA.findIndex(r => r[KOLOM.id] === sunting);
-                if (idx !== -1) {
-                    DATA[idx] = { ...DATA[idx], ...data };
-                    beritahu("Laporan #" + sunting + " diperbarui.");
-                }
-            } else {
-                const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-                data[KOLOM.id] = id;
-                data[KOLOM.dibuat] = new Date().toISOString();
-                DATA.push(data);
-                beritahu("Laporan baru berhasil disimpan.");
-            }
-            simpanData();
-            tutupLaci();
-            isiPenyaring();
-            gambar();
-            renderDatabase();
-        }
-
+async function simpanLaporan(){
+  if(userRole!=="admin"){beritahu("Hanya admin yang dapat menyimpan.");return;}
+  const data=ambilForm();
+  if(!data[KOLOM.tanggal]||!data[KOLOM.noKa]||!data[KOLOM.trainset]||!data[KOLOM.kategori]){beritahu("Lengkapi Tanggal, Nomor KA, Trainset, dan Kategori gangguan.");return;}
+  const b=$("#btnSimpan"); b.disabled=true;
+  try{ if(sunting){const r=DATA.find(x=>x[KOLOM.id]===sunting); if(!r||!r._apiRowIndex) throw Error("Baris Google Sheets tidak ditemukan."); await apiUpdate(r._apiRowIndex,data); beritahu("Laporan diperbarui di Google Sheets.");}
+  else{data[KOLOM.dibuat]=new Date().toISOString(); await apiCreate(data); beritahu("Laporan berhasil disimpan ke Google Sheets.");}
+  await muatData(); tutupLaci(); isiPenyaring(); gambar(); renderDatabase();}catch(e){console.error(e);beritahu(e.message||"Gagal menyimpan data.");}finally{b.disabled=false;}
+}
+async function hapusLaporan(r){
+  if(userRole!=="admin"){beritahu("Hanya admin yang dapat menghapus.");return;}
+  if(!r||!r._apiRowIndex){beritahu("Baris Google Sheets tidak ditemukan.");return;}
+  if(!confirm("Hapus laporan "+(r[KOLOM.noKa]||"")+" / "+(r[KOLOM.trainset]||"")+" dari Google Sheets?\n\nData akan dihapus permanen."))return;
+  try{await apiDelete(r._apiRowIndex);await muatData();isiPenyaring();gambar();renderDatabase();beritahu("Laporan berhasil dihapus dari Google Sheets.");}catch(e){console.error(e);beritahu(e.message||"Gagal menghapus data.");}
+}
         /* ===== DATABASE VIEW ===== */
         function dbFiltered() {
             const q = $("#dbCari").value.trim().toLowerCase();
@@ -2128,7 +2130,7 @@
         }
 
         /* ===== EVENT LISTENERS ===== */
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             showLogin();
             initGrafik();
 
@@ -2183,40 +2185,7 @@
 
             gambarStripForm();
 
-            // Demo data
-            muatData();
-            if (DATA.length === 0) {
-                const demo = [
-                    { [KOLOM.id]: "demo1", [KOLOM.tanggal]: "2026-08-10", [KOLOM.jam]: "07:15", [KOLOM.noKa]: "1724",
-                        [KOLOM.relasi]: "Bogor — Jakarta Kota", [KOLOM.trainset]: "205-124", [KOLOM.sf]: "12",
-                        [KOLOM.posisi]: "7", [KOLOM.lokasi]: "Stasiun Depok", [KOLOM.kategori]: "Pintu Otomatis",
-                        [KOLOM.uraian]: "Pintu tidak dapat menutup sempurna di kereta K7, indikator panel merah.",
-                        [KOLOM.tindakan]: "Teknisi melakukan reset sistem pintu, berhasil normal kembali.",
-                        [KOLOM.dampak]: "Lanjut operasi", [KOLOM.telat]: "5", [KOLOM.dipo]: "Depok",
-                        [KOLOM.pelapor]: "Masinis A", [KOLOM.status]: "Selesai",
-                        [KOLOM.dibuat]: "2026-08-10T07:30:00.000Z" },
-                    { [KOLOM.id]: "demo2", [KOLOM.tanggal]: "2026-08-12", [KOLOM.jam]: "09:40", [KOLOM.noKa]: "1245",
-                        [KOLOM.relasi]: "Jakarta Kota — Bogor", [KOLOM.trainset]: "205-089", [KOLOM.sf]: "12",
-                        [KOLOM.posisi]: "3", [KOLOM.lokasi]: "Petak jalan Juanda — Gondangdia",
-                        [KOLOM.kategori]: "Propulsi / Traksi",
-                        [KOLOM.uraian]: "Traction motor K3 mengeluarkan suara abnormal dan asap.",
-                        [KOLOM.tindakan]: "KA dimasukkan ke dipo Bukit Duri untuk pemeriksaan lanjutan.",
-                        [KOLOM.dampak]: "Sarana diganti", [KOLOM.telat]: "25", [KOLOM.dipo]: "Bukit Duri",
-                        [KOLOM.pelapor]: "Manager Ops", [KOLOM.status]: "Penanganan",
-                        [KOLOM.dibuat]: "2026-08-12T10:00:00.000Z" },
-                    { [KOLOM.id]: "demo3", [KOLOM.tanggal]: "2026-08-13", [KOLOM.jam]: "05:20", [KOLOM.noKa]: "1087",
-                        [KOLOM.relasi]: "Bekasi — Jakarta Kota", [KOLOM.trainset]: "205-045", [KOLOM.sf]: "8",
-                        [KOLOM.posisi]: "2", [KOLOM.lokasi]: "Stasiun Bekasi", [KOLOM.kategori]: "Pantograf",
-                        [KOLOM.uraian]: "Pantograf turun sendiri di stasiun, tidak bisa naik.",
-                        [KOLOM.tindakan]: "Teknisi mengganti katup udara pantograf.",
-                        [KOLOM.dampak]: "Lanjut operasi", [KOLOM.telat]: "12", [KOLOM.dipo]: "Bekasi",
-                        [KOLOM.pelapor]: "Teknisi Dipo", [KOLOM.status]: "Terbuka",
-                        [KOLOM.dibuat]: "2026-08-13T05:45:00.000Z" }
-                ];
-                DATA = demo;
-                simpanData();
-            }
-            muat();
+            await muat();
         });
     </script>
 </body>
