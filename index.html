@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Papan Gangguan Sarana — KAI Commuter</title></head>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Papan Gangguan Sarana – KAI Commuter</title></head>
 <body>
-<div id="loading" style="font-family:Arial,sans-serif;padding:30px">Memuat aplikasi…</div>
-<script>
-(async()=>{
-  const base='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/7bd7aa100e0b82bde718e97a69d0f04c90824914/index.html';
-  const patch='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/main/patch.js';
-  try{
-    let html=await (await fetch(base,{cache:'no-store'})).text();
-    html=html.replace('document.addEventListener("DOMContentLoaded", () => {','document.addEventListener("DOMContentLoaded", async () => {');
-    html=html.replace(/\s*\/\/ Demo data[\s\S]*?\n\s*muat\(\);\n\s*\}\);/, '\n            await muat();\n        });');
-    const js=await (await fetch(patch,{cache:'no-store'})).text();
-    document.open();document.write(html.replace('</body>','<script>'+js+'</script></body>'));document.close();
+  <div id="loading" style="font-family:Arial,sans-serif;padding:30px">Memuat aplikasi...</div>div>
+  <script>
+    (async()=>{
+      const base='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/05b47c971d18bb14e34802a75d018aab1dcb2089/index.html';
+      const patch='https://raw.githubusercontent.com/shandishantoro-rgb/Gangguan-Sarana/main/patch.js';
+      try{
+        let html=await (await fetch(base,{cache:'no-store'})).text();
+        html=html.replace('document.addEventListener("DOMContentLoaded", () => {',' document.addEventListener("DOMContentLoaded", async () => {');
+        html=html.replace(/\s+\/\/ Demo data[\s\S]+?\n\s+await muatUI\(\);\n/,'\n                      await muatUI();\n');
+        const js=await (await fetch(patch,{cache:'no-store'})).text();
+        document.open();document.write(html.replace('</body>','<script>'+js+'</script></body>'));document.close();
   }catch(e){document.getElementById('loading').textContent='Gagal memuat aplikasi: '+e.message;}
-})();
-</script>
+  })();
+</html>script>
 </body>
 </html>
+  </script>
+</body></title></head>
