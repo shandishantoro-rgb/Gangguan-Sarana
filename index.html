@@ -14,34 +14,46 @@
       const NEW_API = 'https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec';
 
       try {
-        let html = await (await fetch(BASE, { cache: 'no-store' })).text();
+        const response = await fetch(BASE, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Gagal mengambil aplikasi dasar (' + response.status + ')');
+
+        let html = await response.text();
         html = html.replaceAll(OLD_API, NEW_API);
 
-        // Tampilkan tombol Buat Laporan dan Simpan untuk User juga.
+        // Role User: boleh membuat laporan baru dan menyimpan laporan baru.
         html = html.replace(
-          'showDashboard();',
-          'if (role === "user") { $("#btnBaru").style.display = "block"; $("#btnSimpan").style.display = "block"; }\n            showDashboard();'
+          /if\s*\(role\s*===\s*["']admin["']\)\s*\{([\s\S]*?)\}\s*else\s*\{([\s\S]*?)\}/,
+          function (_m, adminBlock, _userBlock) {
+            return 'if (role === "admin") {' + adminBlock + '} else {' +
+              '\n                $("#btnBaru").style.display = "block";' +
+              '\n                $("#btnSimpan").style.display = "block";' +
+              '\n                $("#btnDbCsv").style.display = "none";' +
+              '\n            }';
+          }
         );
 
-        // User boleh membuka form kosong, tetapi tidak boleh mengedit laporan lama.
+        // User tidak boleh mengedit laporan lama, tetapi boleh membuka form kosong.
         html = html.replace(
-          /if\s*\(userRole\s*!==\s*"admin"\)\s*\{\s*beritahu\("Hanya admin yang dapat mengedit\."\);\s*return;\s*\}/,
+          /if\s*\(userRole\s*!==\s*["']admin["']\)\s*\{\s*beritahu\(["']Hanya admin yang dapat mengedit\.["']\);\s*return;\s*\}/,
           'if (userRole !== "admin" && r) { beritahu("User hanya dapat membuat laporan baru."); return; }'
         );
 
-        // User boleh menyimpan laporan baru; edit tetap Admin-only.
+        // User boleh menyimpan laporan baru. Admin tetap dapat menyimpan/edit.
         html = html.replace(
-          /if\s*\(userRole\s*!==\s*"admin"\)\s*\{\s*beritahu\("Hanya admin yang dapat menyimpan\."\);\s*return;\s*\}/,
+          /if\s*\(userRole\s*!==\s*["']admin["']\)\s*\{\s*beritahu\(["']Hanya admin yang dapat menyimpan\.["']\);\s*return;\s*\}/,
           'if (userRole !== "admin" && sunting) { beritahu("User hanya dapat membuat laporan baru."); return; }'
         );
 
-        // Jangan injeksi patch.js. Aplikasi full dari commit 05b47 sudah memiliki CRUD.
+        // Hindari literal </script> di JavaScript parent.
+        const safeHtml = html.replace(/<\\/script/gi, '<\\/scr' + 'ipt');
+
         document.open();
-        document.write(html);
+        document.write(safeHtml);
         document.close();
-      } catch (e) {
-        console.error(e);
-        document.getElementById('loading').textContent = 'Gagal memuat aplikasi: ' + e.message;
+      } catch (error) {
+        console.error(error);
+        const loading = document.getElementById('loading');
+        loading.textContent = 'Gagal memuat aplikasi: ' + error.message;
       }
     })();
   </script>
