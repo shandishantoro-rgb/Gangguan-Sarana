@@ -1,0 +1,403 @@
+/* ============================================
+   DASHBOARD ENHANCEMENT - DATE RANGE PICKER
+      Styling untuk fitur date range picker dan
+         improvement UI/UX dashboard
+            ============================================ */
+
+/* Date Range Picker Container */
+.date-range-picker {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #f0f3f8 100%);
+    border-radius: 12px;
+    border: 1px solid #e0e6ed;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.date-range-picker > * {
+    flex: 0 0 auto;
+}
+
+.date-range-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.date-range-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5a6c7d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.date-range-field input[type="date"] {
+    padding: 10px 12px;
+    border: 2px solid #d4dce6;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    transition: all 0.3s ease;
+    min-width: 160px;
+}
+
+.date-range-field input[type="date"]:hover {
+    border-color: #a8b8ca;
+    background: #fafbfc;
+}
+
+.date-range-field input[type="date"]:focus {
+    outline: none;
+    border-color: #4a9eff;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+}
+
+/* Date Range Action Buttons */
+.date-range-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-date-apply {
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #4a9eff 0%, #3d8ee6 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.25);
+}
+
+.btn-date-apply:hover {
+    background: linear-gradient(135deg, #3d8ee6 0%, #3281d3 100%);
+    box-shadow: 0 6px 16px rgba(74, 158, 255, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-date-apply:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(74, 158, 255, 0.25);
+}
+
+.btn-date-reset {
+    padding: 10px 18px;
+    background: #f0f3f8;
+    color: #5a6c7d;
+    border: 1px solid #d4dce6;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-date-reset:hover {
+    background: #e5ecf3;
+    border-color: #a8b8ca;
+    color: #3a4c5d;
+}
+
+/* Date Info Display */
+.date-range-info {
+    padding: 8px 12px;
+    background: rgba(74, 158, 255, 0.1);
+    border-left: 3px solid #4a9eff;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #2d3e4f;
+    font-weight: 500;
+}
+
+/* Enhanced Dashboard Cards */
+.ubin {
+    position: relative;
+    overflow: hidden;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f3f8;
+    transition: all 0.3s ease;
+}
+
+.ubin:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+    border-color: #e0e6ed;
+}
+
+.ubin::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4a9eff 0%, #00d4ff 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.ubin:hover::before {
+    opacity: 1;
+}
+
+.ubin.m::before {
+    background: linear-gradient(90deg, #ff6b6b 0%, #ff8787 100%);
+}
+
+.ubin.k::before {
+    background: linear-gradient(90deg, #ffa502 0%, #ffb52d 100%);
+}
+
+.ubin.h::before {
+    background: linear-gradient(90deg, #52c41a 0%, #95de64 100%);
+}
+
+.ubin .lbl {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8a94a1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    text-decoration: none;
+}
+
+.ubin .val {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a2332;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ubin .sub {
+    font-size: 12px;
+    color: #8a94a1;
+    font-weight: 500;
+}
+
+/* Enhanced Block Container */
+.blok {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f3f8;
+    transition: all 0.3s ease;
+}
+
+.blok:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.blok-kepala {
+    margin-bottom: 20px;
+}
+
+.blok-kepala h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a2332;
+    margin: 0 0 8px 0;
+}
+
+.blok-kepala .ket {
+    font-size: 13px;
+    color: #8a94a1;
+    font-weight: 500;
+}
+
+/* Enhanced Filter/Toolbar */
+.saring {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f5f7fa;
+    border-radius: 10px;
+}
+
+.saring input,
+.saring select {
+    padding: 10px 12px;
+    border: 1px solid #d4dce6;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.saring input:hover,
+.saring select:hover {
+    border-color: #a8b8ca;
+    background: #fafbfc;
+}
+
+.saring input:focus,
+.saring select:focus {
+    outline: none;
+    border-color: #4a9eff;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+}
+
+.saring input::placeholder {
+    color: #a8b8ca;
+}
+
+/* Enhanced Button Styling */
+.btn {
+    padding: 10px 16px;
+    border: 1px solid #d4dce6;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    color: #5a6c7d;
+}
+
+.btn:hover {
+    background: #f0f3f8;
+    border-color: #a8b8ca;
+    color: #3a4c5d;
+}
+
+.btn.utama {
+    background: linear-gradient(135deg, #4a9eff 0%, #3d8ee6 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.25);
+}
+
+.btn.utama:hover {
+    background: linear-gradient(135deg, #3d8ee6 0%, #3281d3 100%);
+    box-shadow: 0 6px 16px rgba(74, 158, 255, 0.35);
+    transform: translateY(-1px);
+}
+
+/* Enhanced Table Styling */
+.gulung table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.gulung table thead {
+    background: #f5f7fa;
+    border-bottom: 2px solid #e0e6ed;
+}
+
+.gulung table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #5a6c7d;
+    text-transform: capitalize;
+    font-size: 12px;
+}
+
+.gulung table tbody tr {
+    border-bottom: 1px solid #f0f3f8;
+    transition: background-color 0.2s ease;
+}
+
+.gulung table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.gulung table td {
+    padding: 12px;
+    color: #2d3e4f;
+}
+
+/* Status Badge Styling */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-badge.terbuka {
+    background: #fff7e6;
+    color: #ff8c00;
+}
+
+.status-badge.penanganan {
+    background: #ffe7e6;
+    color: #ff6b6b;
+}
+
+.status-badge.selesai {
+    background: #e6f7e0;
+    color: #52c41a;
+}
+
+/* Animation */
+@keyframes slideInUp {
+    from {
+          opacity: 0;
+          transform: translateY(20px);
+    }
+    to {
+          opacity: 1;
+          transform: translateY(0);
+    }
+}
+
+.blok, .ubin {
+    animation: slideInUp 0.3s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .date-range-picker {
+          flex-direction: column;
+          gap: 16px;
+    }
+
+    .date-range-field input[type="date"] {
+          min-width: 100%;
+    }
+
+    .saring {
+          grid-template-columns: 1fr;
+    }
+
+    .baris-atas {
+          grid-template-columns: 1fr 1fr;
+    }
+
+    .ubin .val {
+          font-size: 24px;
+    }
+
+    .gulung {
+          overflow-x: auto;
+    }
+
+    .blok {
+          padding: 16px;
+    }
+}
