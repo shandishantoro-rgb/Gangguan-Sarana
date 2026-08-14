@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const API_URL = "https://script.google.com/macros/s/AKfycbzVmjLNsjRTSo6o3gtuGn_3pODvQ35ZQAluMyHZPJw1o_Xi4x4ERWRnNM0tJdY_Hm/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzAPIS8uo5J3YOTDfuMZD4mJtmK52w34YP9zeDSGsUEIQjSgGwTRfrcDlN4KxdpJOMqVQ/exec";
   const ADMIN_USER = "TrainTraffic";
   const ADMIN_PASSWORD_SHA256 = "c75b445cbff8e87cf1a4432649b5b91e5002a10be8e3ba573179753ddc833959";
 
