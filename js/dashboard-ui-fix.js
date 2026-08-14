@@ -12,8 +12,8 @@
   function parseDate(s) {
     const raw = String(s || "").trim();
     if (!raw) return null;
-    const iso = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (iso) return new Date(Number(iso[3]), Number(iso[2]) - 1, Number(iso[1]));
+    const dmy = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (dmy) return new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
     const d = new Date(raw);
     return Number.isNaN(d.getTime()) ? null : d;
   }
@@ -34,8 +34,14 @@
     return out;
   }
 
-  function normalizedData() {
-    return Array.isArray(window.__dashboardData) ? window.__dashboardData : [];
+  function getRows() {
+    try {
+      const raw = sessionStorage.getItem("gsdata");
+      const rows = raw ? JSON.parse(raw) : [];
+      return Array.isArray(rows) ? rows : [];
+    } catch (_) {
+      return [];
+    }
   }
 
   function renderTrend(data) {
@@ -44,7 +50,7 @@
     const keys = last7Keys();
     const counts = Object.fromEntries(keys.map(k => [k, 0]));
     data.forEach(r => {
-      const d = parseDate(r.Tanggal || r.tanggal);
+      const d = parseDate(r["Tanggal"] || r.tanggal);
       if (!d) return;
       const k = keyDate(d);
       if (k in counts) counts[k]++;
@@ -61,11 +67,10 @@
     const empty = byId("grafikEmpty"); if (empty) empty.style.display = values.some(v=>v>0) ? "none" : "block";
     const total = values.reduce((a,b)=>a+b,0);
     const avg = values.length ? (total/values.length).toFixed(1) : "0";
-    const first = keys[0], last = keys[keys.length-1];
     const fmt = k => `${k.slice(8)}/${k.slice(5,7)}/${k.slice(0,4)}`;
-    const el = byId("grafikPeriode"); if (el) el.textContent = `${fmt(first)} – ${fmt(last)}`;
-    const et = byId("grafikTotal"); if (et) et.textContent = total;
-    const ea = byId("grafikRata"); if (ea) ea.textContent = avg;
+    if (byId("grafikPeriode")) byId("grafikPeriode").textContent = `${fmt(keys[0])} – ${fmt(keys[keys.length-1])}`;
+    if (byId("grafikTotal")) byId("grafikTotal").textContent = total;
+    if (byId("grafikRata")) byId("grafikRata").textContent = avg;
   }
 
   function renderTopCategories(data) {
@@ -78,7 +83,8 @@
     });
     const rows = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
     const max = rows[0]?.[1] || 1;
-    holder.innerHTML = rows.length ? rows.map(([name,val],i) => `<div class="cat-row"><div class="cat-name">${name}</div><div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.max(6,val/max*100)}%;background:${[colors.blue,colors.green,colors.orange,colors.purple,colors.cyan,colors.red,colors.slate,"#E11D48"][i%8]}"></div></div><div class="cat-value">${val}</div></div>`).join("") : "<div class='grafik-empty'>Belum ada data kategori.</div>";
+    const palette = [colors.blue,colors.green,colors.orange,colors.purple,colors.cyan,colors.red,colors.slate,"#E11D48"];
+    holder.innerHTML = rows.length ? rows.map(([name,val],i) => `<div class="cat-row"><div class="cat-name">${name}</div><div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.max(6,val/max*100)}%;background:${palette[i%palette.length]}"></div></div><div class="cat-value">${val}</div></div>`).join("") : "<div class='grafik-empty'>Belum ada data kategori.</div>";
   }
 
   function applyColors() {
@@ -90,8 +96,7 @@
   function boot() {
     applyColors();
     const run = () => {
-      const rows = Array.isArray(window.DATA) ? window.DATA : [];
-      window.__dashboardData = rows;
+      const rows = getRows();
       renderTrend(rows);
       renderTopCategories(rows);
     };
