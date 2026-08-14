@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Papan Gangguan Sarana — KAI Commuter</title>
+    <title>Sistem<link rel="stylesheet" href="css/dashboard-enhanced.css"> Gangguan Sarana — KAI Commuter</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
@@ -88,6 +89,7 @@
                 <div class="bidang"><label>Dampak</label><select id="iDampak"><option value="">Pilih dampak</option></select></div>
                 <div class="bidang"><label>Keterlambatan (menit)</label><input id="iTelat" type="number" min="0" value="0"></div>
                 <div class="bidang"><label>Status</label><select id="iStatus"><option>Terbuka</option><option>Penanganan</option><option>Selesai</option></select></div>
+                <script src="js/date-range-filter.js" defer></script>
                 <div class="bidang"><label>Pelapor</label><input id="iPelapor"></div>
                 <div class="bidang" style="grid-column:1/-1"><label>Uraian gangguan</label><textarea id="iUraian"></textarea></div>
                 <div class="bidang" style="grid-column:1/-1"><label>Tindakan di lapangan</label><textarea id="iTindakan"></textarea></div>
