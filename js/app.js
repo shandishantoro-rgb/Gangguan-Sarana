@@ -78,14 +78,16 @@
     if (byId("btnDbCsv")) byId("btnDbCsv").style.display = userRole === "admin" ? "inline-flex" : "none";
   }
 
-  function showDashboard() {
+  async function showDashboard() {
     byId("loginScreen")?.classList.add("hidden");
     byId("dashboardScreen")?.classList.add("visible");
     setRoleUI();
     populateOptions();
     updateClock();
     if (!showDashboard.timer) showDashboard.timer = setInterval(updateClock, 1000);
-    loadData();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await loadData();
+    requestAnimationFrame(() => renderAll());
   }
 
   async function login() {
@@ -105,7 +107,7 @@
     currentUser = name;
     userRole = role;
     saveSession();
-    showDashboard();
+    await showDashboard();
   }
 
   function logout() {
