@@ -87,7 +87,10 @@
     if (!showDashboard.timer) showDashboard.timer = setInterval(updateClock, 1000);
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     await loadData();
-    requestAnimationFrame(() => renderAll());
+    requestAnimationFrame(() => {
+      renderAll();
+      window.dispatchEvent(new CustomEvent("gss-data-rendered"));
+    });
   }
 
   async function login() {
@@ -220,9 +223,11 @@
       DATA = (result.data || []).map(mapRow);
       sessionStorage.setItem("gsdata", JSON.stringify(DATA));
       renderAll();
+      window.dispatchEvent(new CustomEvent("gss-data-loaded", {detail:{count:DATA.length}}));
     } catch (error) {
       try { DATA = JSON.parse(sessionStorage.getItem("gsdata") || "[]"); } catch (_) { DATA = []; }
       renderAll();
+      window.dispatchEvent(new CustomEvent("gss-data-loaded", {detail:{count:DATA.length, cached:true}}));
       toast(DATA.length ? "Google Sheets gagal dibaca; menampilkan cache terakhir" : error.message);
       console.error(error);
     }
@@ -321,6 +326,7 @@
     let h=`<span class="arah">◀ 1</span>`; for(let i=1;i<=n;i++)h+=`<span class="k${selectedPosition===i?" aktif":""}" data-pos="${i}" role="button" tabindex="0">${i}</span>`; h+=`<span class="arah">${n} ▶</span>`; strip.innerHTML=h;
     strip.querySelectorAll(".k").forEach(k=>{const choose=()=>{selectedPosition=Number(k.dataset.pos);renderPositionStrip();};k.addEventListener("click",choose);k.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();choose();}});});
   }
+
   function resetForm() {
     editingId=null; selectedPosition=null; const d=new Date(); const pad=n=>String(n).padStart(2,"0");
     if(byId("iTanggal"))byId("iTanggal").value=d.toISOString().slice(0,10); if(byId("iJam"))byId("iJam").value=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
