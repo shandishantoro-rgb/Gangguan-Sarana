@@ -11,244 +11,45 @@
     <div class="mac-titlebar">
       <div class="traffic-lights" aria-hidden="true"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
       <div class="window-title">TTC — Train Traffic Simulator</div>
-      <div class="window-stage">PREVIEW PENGEMBANGAN</div>
+      <div class="window-stage">TAHAP 2 · EDITOR DATA</div>
     </div>
 
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand">
           <div class="brand-mark"><span>T</span><span class="brand-red">T</span><span>C</span></div>
-          <div>
-            <div class="brand-name">Train Traffic Simulator</div>
-            <div class="brand-tagline">Perencanaan · Simulasi · Operasi</div>
-          </div>
+          <div><div class="brand-name">Train Traffic Simulator</div><div class="brand-tagline">Perencanaan · Simulasi · Operasi</div></div>
         </div>
-
         <nav class="nav-menu" aria-label="Navigasi utama">
-          <button class="nav-item" data-view="beranda"><span class="nav-icon">⌂</span><span>Beranda</span></button>
-          <button class="nav-item" data-view="proyek"><span class="nav-icon">▣</span><span>Proyek</span></button>
-          <button class="nav-item active" data-view="peta"><span class="nav-icon">⌘</span><span>Peta Jalur</span></button>
-          <button class="nav-item" data-view="stasiun"><span class="nav-icon">●</span><span>Stasiun</span></button>
-          <button class="nav-item" data-view="petak"><span class="nav-icon">═</span><span>Petak Jalan</span></button>
-          <button class="nav-item future" data-future="Tahap 4"><span class="nav-icon">≡</span><span>Jadwal</span><span class="nav-lock">○</span></button>
-          <button class="nav-item future" data-future="Tahap 5"><span class="nav-icon">╱</span><span>GAPEKA</span><span class="nav-lock">○</span></button>
-          <button class="nav-item future" data-future="Tahap 7"><span class="nav-icon">▶</span><span>Simulasi</span><span class="nav-lock">○</span></button>
-          <button class="nav-item future" data-future="Tahap 8"><span class="nav-icon">▤</span><span>Laporan</span><span class="nav-lock">○</span></button>
+          <button class="nav-item" data-view="beranda"><span class="nav-icon">⌂</span><span>Beranda</span></button><button class="nav-item" data-view="proyek"><span class="nav-icon">▣</span><span>Proyek</span></button><button class="nav-item active" data-view="peta"><span class="nav-icon">⌘</span><span>Peta Jalur</span></button><button class="nav-item" data-view="stasiun"><span class="nav-icon">●</span><span>Stasiun</span></button><button class="nav-item" data-view="petak"><span class="nav-icon">═</span><span>Petak Jalan</span></button><button class="nav-item future" data-future="Tahap 4"><span class="nav-icon">≡</span><span>Jadwal</span><span class="nav-lock">○</span></button><button class="nav-item future" data-future="Tahap 5"><span class="nav-icon">╱</span><span>GAPEKA</span><span class="nav-lock">○</span></button><button class="nav-item future" data-future="Tahap 7"><span class="nav-icon">▶</span><span>Simulasi</span><span class="nav-lock">○</span></button><button class="nav-item future" data-future="Tahap 8"><span class="nav-icon">▤</span><span>Laporan</span><span class="nav-lock">○</span></button>
         </nav>
-
-        <div class="nav-section-title">PENGATURAN</div>
-        <nav class="nav-menu secondary">
-          <button class="nav-item future" data-future="Tahap berikutnya"><span class="nav-icon">◇</span><span>Data Referensi</span></button>
-          <button class="nav-item future" data-future="Tahap berikutnya"><span class="nav-icon">⚙</span><span>Pengaturan</span></button>
-        </nav>
-
-        <div class="sidebar-footer">
-          <div class="rail-silhouette" aria-hidden="true">▰▰▰▰▰</div>
-          <div class="footer-copy">Untuk perencanaan operasi<br>kereta api yang lebih terukur</div>
-        </div>
+        <div class="nav-section-title">PENGATURAN</div><nav class="nav-menu secondary"><button class="nav-item future" data-future="Tahap berikutnya"><span class="nav-icon">◇</span><span>Data Referensi</span></button><button class="nav-item future" data-future="Tahap berikutnya"><span class="nav-icon">⚙</span><span>Pengaturan</span></button></nav>
+        <div class="sidebar-footer"><div class="rail-silhouette" aria-hidden="true">▰▰▰▰▰</div><div class="footer-copy">Untuk perencanaan operasi<br>kereta api yang lebih terukur</div></div>
       </aside>
 
       <div class="workspace">
-        <header class="toolbar">
-          <div class="toolbar-group">
-            <button class="tool-btn" id="btn-baru" title="Buat proyek baru"><span>＋</span> Baru</button>
-            <label class="tool-btn" for="file-buka" title="Buka proyek JSON"><span>⌂</span> Buka</label>
-            <input id="file-buka" type="file" accept=".json,application/json" hidden>
-            <button class="tool-btn primary" id="btn-simpan" title="Simpan proyek JSON"><span>▣</span> Simpan</button>
-          </div>
-          <div class="toolbar-separator"></div>
-          <div class="toolbar-group">
-            <button class="tool-btn" id="btn-contoh" title="Muat data contoh"><span>◫</span> Contoh</button>
-            <button class="tool-btn disabled-action" data-message="Fitur Impor akan dibuat pada tahap berikutnya"><span>⇩</span> Impor</button>
-            <button class="tool-btn disabled-action" data-message="Fitur Ekspor akan dibuat pada Tahap 8"><span>⇧</span> Ekspor</button>
-          </div>
-          <div class="toolbar-spacer"></div>
-          <div class="project-chip">
-            <span class="chip-label">Proyek aktif</span>
-            <strong id="toolbar-nama-proyek">Proyek TTC</strong>
-          </div>
-          <div class="user-chip">
-            <div class="avatar">AS</div>
-            <div><strong>Pemilik Proyek</strong><span>Preview TTC</span></div>
-          </div>
-        </header>
-
-        <div class="module-tabs" role="tablist">
-          <button class="module-tab active" data-module="peta">Peta Jalur</button>
-          <button class="module-tab" data-module="jaringan">Data Jaringan</button>
-          <button class="module-tab disabled-action" data-message="Generator Jadwal tersedia pada Tahap 4">Generator Jadwal</button>
-          <button class="module-tab disabled-action" data-message="GAPEKA tersedia pada Tahap 5">GAPEKA</button>
-          <button class="module-tab disabled-action" data-message="Simulasi tersedia pada Tahap 7">Simulasi</button>
-        </div>
+        <header class="toolbar"><div class="toolbar-group"><button class="tool-btn" id="btn-baru"><span>＋</span> Baru</button><label class="tool-btn" for="file-buka"><span>⌂</span> Buka</label><input id="file-buka" type="file" accept=".json,application/json" hidden><button class="tool-btn primary" id="btn-simpan"><span>▣</span> Simpan</button></div><div class="toolbar-separator"></div><div class="toolbar-group"><button class="tool-btn" id="btn-contoh"><span>◫</span> Contoh</button><button class="tool-btn disabled-action" data-message="Fitur Impor akan dibuat pada tahap berikutnya"><span>⇩</span> Impor</button><button class="tool-btn disabled-action" data-message="Fitur Ekspor akan dibuat pada Tahap 8"><span>⇧</span> Ekspor</button></div><div class="toolbar-spacer"></div><div class="project-chip"><span class="chip-label">Proyek aktif</span><strong id="toolbar-nama-proyek">Proyek TTC</strong></div><div class="user-chip"><div class="avatar">AS</div><div><strong>Pemilik Proyek</strong><span>Editor Data</span></div></div></header>
+        <div class="module-tabs" role="tablist"><button class="module-tab active" data-module="peta">Peta Jalur</button><button class="module-tab" data-module="jaringan">Data Jaringan</button><button class="module-tab disabled-action" data-message="Generator Jadwal tersedia pada Tahap 4">Generator Jadwal</button><button class="module-tab disabled-action" data-message="GAPEKA tersedia pada Tahap 5">GAPEKA</button><button class="module-tab disabled-action" data-message="Simulasi tersedia pada Tahap 7">Simulasi</button></div>
+        <div class="validation-banner hidden" id="validation-banner" role="alert"></div>
 
         <main class="content-area">
-          <section class="main-card map-card" id="view-peta">
-            <div class="card-head">
-              <div>
-                <div class="eyebrow">JARINGAN AKTIF</div>
-                <h1 id="map-title">Peta Jalur</h1>
-                <p id="map-subtitle">Belum ada stasiun. Tambahkan data atau muat contoh.</p>
-              </div>
-              <div class="map-actions">
-                <button class="icon-btn" id="btn-fit" title="Sesuaikan tampilan">⌗</button>
-                <button class="icon-btn disabled-action" data-message="Zoom interaktif akan dikembangkan bersama editor peta" title="Perbesar">＋</button>
-                <button class="icon-btn disabled-action" data-message="Zoom interaktif akan dikembangkan bersama editor peta" title="Perkecil">−</button>
-                <button class="legend-toggle" id="btn-legenda">Legenda</button>
-              </div>
-            </div>
+          <section class="main-card map-card" id="view-peta"><div class="card-head"><div><div class="eyebrow">JARINGAN AKTIF</div><h1 id="map-title">Peta Jalur</h1><p id="map-subtitle">Belum ada stasiun. Tambahkan data atau muat contoh.</p></div><div class="map-actions"><button class="icon-btn" id="btn-fit">⌗</button><button class="icon-btn disabled-action" data-message="Zoom interaktif akan dikembangkan bersama editor peta">＋</button><button class="icon-btn disabled-action" data-message="Zoom interaktif akan dikembangkan bersama editor peta">−</button><button class="legend-toggle" id="btn-legenda">Legenda</button></div></div><div class="network-canvas-wrap"><div class="canvas-grid"></div><svg id="network-svg" viewBox="0 0 1000 460" preserveAspectRatio="xMidYMid meet"></svg><div class="empty-map" id="empty-map"><div class="empty-icon">╍╍╍●╍╍╍</div><strong>Belum ada jaringan</strong><span>Gunakan tombol <b>Contoh</b> atau tambah stasiun melalui panel Data Jaringan.</span></div><div class="map-scale"><span>0</span><i></i><span id="scale-end">— km</span></div><div class="map-watermark">TTC NETWORK</div><div class="legend-box" id="legend-box"><strong>Legenda</strong><div><span class="legend-dot"></span> Stasiun</div><div><span class="legend-line double"></span> Lintas Ganda</div><div><span class="legend-line single"></span> Lintas Tunggal</div><div><span class="legend-selected"></span> Terpilih</div></div></div></section>
 
-            <div class="network-canvas-wrap">
-              <div class="canvas-grid"></div>
-              <svg id="network-svg" viewBox="0 0 1000 460" preserveAspectRatio="xMidYMid meet" aria-label="Peta jalur"></svg>
-              <div class="empty-map" id="empty-map">
-                <div class="empty-icon">╍╍╍●╍╍╍</div>
-                <strong>Belum ada jaringan</strong>
-                <span>Gunakan tombol <b>Contoh</b> atau tambah stasiun melalui panel Data Jaringan.</span>
-              </div>
-              <div class="map-scale"><span>0</span><i></i><span id="scale-end">— km</span></div>
-              <div class="map-watermark">TTC NETWORK</div>
-              <div class="legend-box" id="legend-box">
-                <strong>Legenda</strong>
-                <div><span class="legend-dot"></span> Stasiun</div>
-                <div><span class="legend-line double"></span> Lintas Ganda</div>
-                <div><span class="legend-line single"></span> Lintas Tunggal</div>
-                <div><span class="legend-selected"></span> Terpilih</div>
-              </div>
-            </div>
-          </section>
-
-          <aside class="properties-card">
-            <div class="properties-head">
-              <div><span class="eyebrow">INSPEKTOR</span><h2>Properti</h2></div>
-              <button class="kebab" aria-label="Menu properti">•••</button>
-            </div>
-            <div class="property-tabs">
-              <button class="property-tab active" data-property="stasiun">Stasiun</button>
-              <button class="property-tab" data-property="petak">Petak Jalan</button>
-            </div>
-            <div class="property-body" id="property-stasiun">
-              <div class="selected-object">
-                <div class="station-icon">●</div>
-                <div><strong id="prop-title">Belum dipilih</strong><span>Klik stasiun pada peta atau daftar.</span></div>
-              </div>
-              <div class="property-grid">
-                <label>Kode<input id="prop-kode" readonly placeholder="—"></label>
-                <label>Nama<input id="prop-nama" readonly placeholder="—"></label>
-                <label>Km<input id="prop-km" readonly placeholder="—"></label>
-                <label>Jumlah Jalur<input id="prop-jalur" readonly placeholder="—"></label>
-                <label class="full">Jenis<input id="prop-jenis" readonly placeholder="—"></label>
-              </div>
-              <div class="property-note">Panel ini menampilkan data stasiun yang dipilih. Penyuntingan langsung akan dilengkapi pada tahap editor data.</div>
-            </div>
-            <div class="property-body hidden" id="property-petak">
-              <div class="selected-object">
-                <div class="station-icon line-icon">═</div>
-                <div><strong id="prop-petak-title">Belum dipilih</strong><span>Klik petak pada daftar.</span></div>
-              </div>
-              <div class="property-grid">
-                <label>Dari<input id="prop-dari" readonly placeholder="—"></label>
-                <label>Ke<input id="prop-ke" readonly placeholder="—"></label>
-                <label>Jarak<input id="prop-jarak" readonly placeholder="—"></label>
-                <label>Jalur<input id="prop-jenis-jalur" readonly placeholder="—"></label>
-                <label class="full">Kecepatan Maksimum<input id="prop-vmax" readonly placeholder="—"></label>
-              </div>
-            </div>
+          <aside class="properties-card"><div class="properties-head"><div><span class="eyebrow">INSPEKTOR</span><h2>Properti</h2></div><button class="kebab">•••</button></div><div class="property-tabs"><button class="property-tab active" data-property="stasiun">Stasiun</button><button class="property-tab" data-property="petak">Petak Jalan</button></div>
+            <div class="property-body" id="property-stasiun"><div class="selected-object"><div class="station-icon">●</div><div><strong id="prop-title">Belum dipilih</strong><span>Pilih satu baris untuk mengubah atau menghapus.</span></div></div><div class="property-grid editable-grid"><label>Kode<input id="prop-kode" maxlength="8" placeholder="—" disabled></label><label>Nama<input id="prop-nama" placeholder="—" disabled></label><label>Km<input id="prop-km" type="number" step="0.001" min="0" placeholder="—" disabled></label><label>Jumlah Jalur<input id="prop-jalur" type="number" min="1" step="1" placeholder="—" disabled></label><label class="full">Jenis<select id="prop-jenis" disabled><option>Stasiun</option><option>Perhentian</option></select></label></div><div class="property-actions"><button id="btn-hapus-stasiun" class="danger-action" disabled>Hapus</button><button id="btn-simpan-stasiun" class="primary-action" disabled>Simpan Perubahan</button></div><div class="property-note">Perubahan disimpan ke proyek aktif dan tabel otomatis diurutkan berdasarkan Km.</div></div>
+            <div class="property-body hidden" id="property-petak"><div class="selected-object"><div class="station-icon line-icon">═</div><div><strong id="prop-petak-title">Belum dipilih</strong><span>Pilih satu petak pada tabel.</span></div></div><div class="property-grid editable-grid"><label>Dari<select id="prop-dari" disabled></select></label><label>Ke<select id="prop-ke" disabled></select></label><label>Jarak (km)<input id="prop-jarak" type="number" min="0.001" step="0.001" placeholder="—" disabled></label><label>Jalur<select id="prop-jenis-jalur" disabled><option value="Tunggal">Lintas Tunggal</option><option value="Ganda">Lintas Ganda</option></select></label><label class="full">Kecepatan Maksimum<input id="prop-vmax" type="number" min="1" step="1" placeholder="—" disabled></label></div><div class="property-actions"><button id="btn-hapus-petak" class="danger-action" disabled>Hapus</button><button id="btn-simpan-petak" class="primary-action" disabled>Simpan Perubahan</button></div></div>
           </aside>
 
-          <section class="bottom-card data-card">
-            <div class="bottom-tabs">
-              <button class="bottom-tab active" data-bottom="jaringan">Data Jaringan <span id="badge-network">0</span></button>
-              <button class="bottom-tab" data-bottom="kereta">Daftar Kereta <span>0</span></button>
-              <button class="bottom-tab" data-bottom="proyek">Informasi Proyek</button>
-            </div>
-
-            <div class="bottom-panel" id="bottom-jaringan">
-              <div class="panel-toolbar">
-                <div class="segmented">
-                  <button class="segment active" data-list="stasiun">Stasiun <span id="jumlah-stasiun">0</span></button>
-                  <button class="segment" data-list="petak">Petak Jalan <span id="jumlah-petak">0</span></button>
-                </div>
-                <div class="panel-toolbar-spacer"></div>
-                <button class="small-btn" id="btn-tambah-stasiun">＋ Stasiun</button>
-                <button class="small-btn" id="btn-tambah-petak">＋ Petak</button>
-              </div>
-
-              <div class="table-wrap" id="table-stasiun-wrap">
-                <table>
-                  <thead><tr><th>Kode</th><th>Nama</th><th>Km</th><th>Jalur</th><th>Jenis</th><th>Status</th></tr></thead>
-                  <tbody id="tabel-stasiun"></tbody>
-                </table>
-                <div class="table-empty" id="empty-stasiun">Belum ada data stasiun.</div>
-              </div>
-
-              <div class="table-wrap hidden" id="table-petak-wrap">
-                <table>
-                  <thead><tr><th>Dari</th><th>Ke</th><th>Jarak</th><th>Jenis Jalur</th><th>Vmax</th><th>Status</th></tr></thead>
-                  <tbody id="tabel-petak"></tbody>
-                </table>
-                <div class="table-empty" id="empty-petak">Belum ada data Petak Jalan.</div>
-              </div>
-            </div>
-
-            <div class="bottom-panel hidden placeholder-panel" id="bottom-kereta">
-              <div class="placeholder-icon">▤</div>
-              <strong>Daftar Kereta belum tersedia</strong>
-              <span>Bagian ini sudah disiapkan dalam UI. Datanya akan diisi saat generator jadwal dikerjakan.</span>
-            </div>
-
-            <div class="bottom-panel hidden project-info" id="bottom-proyek">
-              <label>Nama Proyek<input id="nama-proyek" type="text" value="Proyek TTC"></label>
-              <div class="info-stat"><span>Format</span><strong>TTC-Project JSON</strong></div>
-              <div class="info-stat"><span>Versi data</span><strong>1</strong></div>
-              <div class="info-stat"><span>Status</span><strong class="ok-text">Tahap 1 aktif</strong></div>
-            </div>
-          </section>
-
-          <section class="bottom-card log-card">
-            <div class="log-head"><div><span class="eyebrow">AKTIVITAS</span><h2>Log Simulasi</h2></div><button id="btn-clear-log" class="text-btn">Bersihkan</button></div>
-            <div class="log-list" id="log-list"></div>
-          </section>
+          <section class="bottom-card data-card"><div class="bottom-tabs"><button class="bottom-tab active" data-bottom="jaringan">Data Jaringan <span id="badge-network">0</span></button><button class="bottom-tab" data-bottom="kereta">Daftar Kereta <span>0</span></button><button class="bottom-tab" data-bottom="proyek">Informasi Proyek</button></div><div class="bottom-panel" id="bottom-jaringan"><div class="panel-toolbar"><div class="segmented"><button class="segment active" data-list="stasiun">Stasiun <span id="jumlah-stasiun">0</span></button><button class="segment" data-list="petak">Petak Jalan <span id="jumlah-petak">0</span></button></div><div class="panel-toolbar-spacer"></div><button class="small-btn" id="btn-urut-stasiun">↕ Urutkan Km</button><button class="small-btn" id="btn-tambah-stasiun">＋ Stasiun</button><button class="small-btn" id="btn-tambah-petak">＋ Petak</button></div><div class="table-wrap" id="table-stasiun-wrap"><table><thead><tr><th>Kode</th><th>Nama</th><th>Km</th><th>Jalur</th><th>Jenis</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tabel-stasiun"></tbody></table><div class="table-empty" id="empty-stasiun">Belum ada data stasiun.</div></div><div class="table-wrap hidden" id="table-petak-wrap"><table><thead><tr><th>Dari</th><th>Ke</th><th>Jarak</th><th>Jenis Jalur</th><th>Vmax</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tabel-petak"></tbody></table><div class="table-empty" id="empty-petak">Belum ada data Petak Jalan.</div></div></div><div class="bottom-panel hidden placeholder-panel" id="bottom-kereta"><div class="placeholder-icon">▤</div><strong>Daftar Kereta belum tersedia</strong><span>Bagian ini sudah disiapkan dalam UI. Datanya akan diisi saat generator jadwal dikerjakan.</span></div><div class="bottom-panel hidden project-info" id="bottom-proyek"><label>Nama Proyek<input id="nama-proyek" type="text" value="Proyek TTC"></label><div class="info-stat"><span>Format</span><strong>TTC-Project JSON</strong></div><div class="info-stat"><span>Versi data</span><strong>1</strong></div><div class="info-stat"><span>Status</span><strong class="ok-text">Tahap 2 aktif</strong></div></div></section>
+          <section class="bottom-card log-card"><div class="log-head"><div><span class="eyebrow">AKTIVITAS</span><h2>Log Simulasi</h2></div><button id="btn-clear-log" class="text-btn">Bersihkan</button></div><div class="log-list" id="log-list"></div></section>
         </main>
-
-        <footer class="statusbar">
-          <div><strong>TTC v0.1</strong> <span class="alpha">UI Preview</span></div>
-          <div id="status-text"><span class="status-dot"></span> Siap</div>
-          <div id="status-counts">0 stasiun · 0 petak</div>
-        </footer>
+        <footer class="statusbar"><div><strong>TTC v0.1</strong> <span class="alpha">Tahap 2</span></div><div id="status-text"><span class="status-dot"></span> Siap</div><div id="status-counts">0 stasiun · 0 petak</div></footer>
       </div>
     </div>
   </div>
-
   <div class="toast" id="toast" role="status"></div>
-
-  <div class="modal-backdrop hidden" id="modal-stasiun">
-    <div class="modal">
-      <div class="modal-head"><div><span class="eyebrow">DATA JARINGAN</span><h2>Tambah Stasiun</h2></div><button class="modal-close" data-close="modal-stasiun">×</button></div>
-      <form id="form-stasiun" class="modal-form">
-        <label>Kode<input id="st-kode" maxlength="8" placeholder="BOO" required></label>
-        <label>Nama<input id="st-nama" placeholder="Bogor" required></label>
-        <label>Km<input id="st-km" type="number" step="0.001" placeholder="0" required></label>
-        <label>Jumlah Jalur<input id="st-jalur" type="number" min="1" step="1" value="2" required></label>
-        <label class="full">Jenis<select id="st-jenis"><option>Stasiun</option><option>Perhentian</option></select></label>
-        <div class="modal-actions"><button type="button" class="ghost" data-close="modal-stasiun">Batal</button><button type="submit" class="primary-action">Tambah Stasiun</button></div>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal-backdrop hidden" id="modal-petak">
-    <div class="modal">
-      <div class="modal-head"><div><span class="eyebrow">DATA JARINGAN</span><h2>Tambah Petak Jalan</h2></div><button class="modal-close" data-close="modal-petak">×</button></div>
-      <form id="form-petak" class="modal-form">
-        <label>Dari<select id="petak-dari" required></select></label>
-        <label>Ke<select id="petak-ke" required></select></label>
-        <label>Jarak (km)<input id="petak-jarak" type="number" min="0.001" step="0.001" required></label>
-        <label>Jenis Jalur<select id="petak-jenis"><option value="Tunggal">Lintas Tunggal</option><option value="Ganda">Lintas Ganda</option></select></label>
-        <label class="full">Kecepatan Maksimum (km/jam)<input id="petak-vmax" type="number" min="1" step="1" placeholder="70" required></label>
-        <div class="modal-actions"><button type="button" class="ghost" data-close="modal-petak">Batal</button><button type="submit" class="primary-action">Tambah Petak Jalan</button></div>
-      </form>
-    </div>
-  </div>
-
+  <div class="modal-backdrop hidden" id="modal-stasiun"><div class="modal"><div class="modal-head"><div><span class="eyebrow">DATA JARINGAN</span><h2>Tambah Stasiun</h2></div><button class="modal-close" data-close="modal-stasiun">×</button></div><form id="form-stasiun" class="modal-form"><label>Kode<input id="st-kode" maxlength="8" placeholder="BOO" required></label><label>Nama<input id="st-nama" placeholder="Bogor" required></label><label>Km<input id="st-km" type="number" step="0.001" min="0" placeholder="0" required></label><label>Jumlah Jalur<input id="st-jalur" type="number" min="1" step="1" value="2" required></label><label class="full">Jenis<select id="st-jenis"><option>Stasiun</option><option>Perhentian</option></select></label><div class="modal-actions"><button type="button" class="ghost" data-close="modal-stasiun">Batal</button><button type="submit" class="primary-action">Tambah Stasiun</button></div></form></div></div>
+  <div class="modal-backdrop hidden" id="modal-petak"><div class="modal"><div class="modal-head"><div><span class="eyebrow">DATA JARINGAN</span><h2>Tambah Petak Jalan</h2></div><button class="modal-close" data-close="modal-petak">×</button></div><form id="form-petak" class="modal-form"><label>Dari<select id="petak-dari" required></select></label><label>Ke<select id="petak-ke" required></select></label><label>Jarak (km)<input id="petak-jarak" type="number" min="0.001" step="0.001" required></label><label>Jenis Jalur<select id="petak-jenis"><option value="Tunggal">Lintas Tunggal</option><option value="Ganda">Lintas Ganda</option></select></label><label class="full">Kecepatan Maksimum (km/jam)<input id="petak-vmax" type="number" min="1" step="1" placeholder="70" required></label><div class="modal-actions"><button type="button" class="ghost" data-close="modal-petak">Batal</button><button type="submit" class="primary-action">Tambah Petak Jalan</button></div></form></div></div>
   <script src="app.js"></script>
 </body>
 </html>
