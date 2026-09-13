@@ -110,3 +110,18 @@ function unduhGapekaPNG(nama, skala) {
 
 global.TTCEkspor = { unduh, daftarWaktuCSV, matriksCSV, konflikCSV, unduhGapekaSVG, unduhGapekaPNG, gapekaSVG };
 })(window);
+
+/* TTC project library loader */
+(function () {
+  if (typeof document === 'undefined') return;
+  document.documentElement.classList.add('pm-boot');
+  try { window.__TTC_HAD_LEGACY_AUTO__ = !!localStorage.getItem('ttc-proyek-otomatis'); } catch (e) { window.__TTC_HAD_LEGACY_AUTO__ = false; }
+  const store = document.createElement('script');
+  store.src = 'js/ttc-proyek.js';
+  store.onload = function () {
+    const manager = document.createElement('script');
+    manager.src = 'js/ttc-project-manager.js';
+    document.head.appendChild(manager);
+  };
+  document.head.appendChild(store);
+})();
