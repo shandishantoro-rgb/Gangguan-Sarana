@@ -1,55 +1,711 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TTC — Train Traffic Simulator</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TTC — Train Traffic Simulator</title>
+<link rel="stylesheet" href="styles.css">
+<style id="gaya-gapeka">
+.gp-labelbg{fill:#f6f8fa}
+.gp-kepala{font:500 9px "SF Mono",ui-monospace,monospace;letter-spacing:.12em;fill:#6d7d8b}
+.gp-stnama{font:600 10px -apple-system,"Segoe UI",sans-serif;fill:#131a21}
+.gp-stkm{font:8.5px "SF Mono",ui-monospace,monospace;fill:#6d7d8b}
+.gp-tick{stroke:#adb9c4;stroke-width:1}
+.gp-stasiun{stroke:#dbe2e8;stroke-width:1}
+.gp-jam{stroke:#9fb0bf;stroke-width:1}
+.gp-menit{stroke:#eef2f5;stroke-width:1}
+.gp-menit30{stroke:#dfe6ec;stroke-width:1}
+.gp-jamlabel{font:600 9.5px "SF Mono",ui-monospace,monospace;fill:#41505d}
+.gp-garis{fill:none;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.gp-garis.hilir{stroke:#1f5fa8}
+.gp-garis.hulu{stroke:#c0402d}
+.gp-hit{fill:none;stroke:transparent;stroke-width:9;cursor:pointer}
+.gp-ka.sorot .gp-garis{stroke-width:3.4;stroke:#0e7a4a}
+.gp-ka:hover .gp-garis{stroke-width:2.6}
+.gp-nomor{font:600 8.5px "SF Mono",ui-monospace,monospace;fill:#41505d;text-anchor:end}
+.gp-konflik circle{fill:#c0402d;fill-opacity:.85;stroke:#fff;stroke-width:1.5}
+.gp-konflik.sedang circle{fill:#a1740f}
+.gp-kursor{stroke:#0e7a4a;stroke-width:1.6;stroke-dasharray:5 4}
+.gp-titik{stroke:#fff;stroke-width:1.5}
+.gp-titik.hilir{fill:#1f5fa8}
+.gp-titik.hulu{fill:#c0402d}
+.gp-titik.diam{stroke:#0e7a4a;stroke-width:2.4}
+</style>
+
 </head>
 <body>
-  <div class="app-window">
-    <div class="mac-titlebar">
-      <div class="traffic-lights" aria-hidden="true"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
-      <div class="window-title">TTC — Train Traffic Simulator</div>
-      <div class="window-stage">TAHAP 2 · EDITOR DATA</div>
-    </div>
+<div class="app-window">
 
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark"><span>T</span><span class="brand-red">T</span><span>C</span></div>
-          <div><div class="brand-name">Train Traffic Simulator</div><div class="brand-tagline">Perencanaan · Simulasi · Operasi</div></div>
-        </div>
-        <nav class="nav-menu" aria-label="Navigasi utama">
-          <button class="nav-item" data-view="beranda"><span class="nav-icon">⌂</span><span>Beranda</span></button><button class="nav-item" data-view="proyek"><span class="nav-icon">▣</span><span>Proyek</span></button><button class="nav-item active" data-view="peta"><span class="nav-icon">⌘</span><span>Peta Jalur</span></button><button class="nav-item" data-view="stasiun"><span class="nav-icon">●</span><span>Stasiun</span></button><button class="nav-item" data-view="petak"><span class="nav-icon">═</span><span>Petak Jalan</span></button><button class="nav-item future" data-future="Tahap 4"><span class="nav-icon">≡</span><span>Jadwal</span><span class="nav-lock">○</span></button><button class="nav-item future" data-future="Tahap 5"><span class="nav-icon">╱</span><span>GAPEKA</span><span class="nav-lock">○</span></button><button class="nav-item future" data-future="Tahap 7"><span class="nav-icon">▶</span><span>Simulasi</span><span class="nav-lock">○</span></button><button class="nav-item future" data-future="Tahap 8"><span class="nav-icon">▤</span><span>Laporan</span><span class="nav-lock">○</span></button>
-        </nav>
-        <div class="nav-section-title">PENGATURAN</div><nav class="nav-menu secondary"><button class="nav-item future" data-future="Tahap berikutnya"><span class="nav-icon">◇</span><span>Data Referensi</span></button><button class="nav-item future" data-future="Tahap berikutnya"><span class="nav-icon">⚙</span><span>Pengaturan</span></button></nav>
-        <div class="sidebar-footer"><div class="rail-silhouette" aria-hidden="true">▰▰▰▰▰</div><div class="footer-copy">Untuk perencanaan operasi<br>kereta api yang lebih terukur</div></div>
-      </aside>
+  <div class="mac-titlebar">
+    <div class="traffic-lights" aria-hidden="true"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+    <div class="window-title">TTC — Train Traffic Simulator</div>
+    <div class="window-stage" id="window-stage">v1.0</div>
+  </div>
 
-      <div class="workspace">
-        <header class="toolbar"><div class="toolbar-group"><button class="tool-btn" id="btn-baru"><span>＋</span> Baru</button><label class="tool-btn" for="file-buka"><span>⌂</span> Buka</label><input id="file-buka" type="file" accept=".json,application/json" hidden><button class="tool-btn primary" id="btn-simpan"><span>▣</span> Simpan</button></div><div class="toolbar-separator"></div><div class="toolbar-group"><button class="tool-btn" id="btn-contoh"><span>◫</span> Contoh</button><button class="tool-btn disabled-action" data-message="Fitur Impor akan dibuat pada tahap berikutnya"><span>⇩</span> Impor</button><button class="tool-btn disabled-action" data-message="Fitur Ekspor akan dibuat pada Tahap 8"><span>⇧</span> Ekspor</button></div><div class="toolbar-spacer"></div><div class="project-chip"><span class="chip-label">Proyek aktif</span><strong id="toolbar-nama-proyek">Proyek TTC</strong></div><div class="user-chip"><div class="avatar">AS</div><div><strong>Pemilik Proyek</strong><span>Editor Data</span></div></div></header>
-        <div class="module-tabs" role="tablist"><button class="module-tab active" data-module="peta">Peta Jalur</button><button class="module-tab" data-module="jaringan">Data Jaringan</button><button class="module-tab disabled-action" data-message="Generator Jadwal tersedia pada Tahap 4">Generator Jadwal</button><button class="module-tab disabled-action" data-message="GAPEKA tersedia pada Tahap 5">GAPEKA</button><button class="module-tab disabled-action" data-message="Simulasi tersedia pada Tahap 7">Simulasi</button></div>
-        <div class="validation-banner hidden" id="validation-banner" role="alert"></div>
+  <div class="app-shell">
 
-        <main class="content-area">
-          <section class="main-card map-card" id="view-peta"><div class="card-head"><div><div class="eyebrow">JARINGAN AKTIF</div><h1 id="map-title">Peta Jalur</h1><p id="map-subtitle">Belum ada stasiun. Tambahkan data atau muat contoh.</p></div><div class="map-actions"><button class="icon-btn" id="btn-fit">⌗</button><button class="icon-btn disabled-action" data-message="Zoom interaktif akan dikembangkan bersama editor peta">＋</button><button class="icon-btn disabled-action" data-message="Zoom interaktif akan dikembangkan bersama editor peta">−</button><button class="legend-toggle" id="btn-legenda">Legenda</button></div></div><div class="network-canvas-wrap"><div class="canvas-grid"></div><svg id="network-svg" viewBox="0 0 1000 460" preserveAspectRatio="xMidYMid meet"></svg><div class="empty-map" id="empty-map"><div class="empty-icon">╍╍╍●╍╍╍</div><strong>Belum ada jaringan</strong><span>Gunakan tombol <b>Contoh</b> atau tambah stasiun melalui panel Data Jaringan.</span></div><div class="map-scale"><span>0</span><i></i><span id="scale-end">— km</span></div><div class="map-watermark">TTC NETWORK</div><div class="legend-box" id="legend-box"><strong>Legenda</strong><div><span class="legend-dot"></span> Stasiun</div><div><span class="legend-line double"></span> Lintas Ganda</div><div><span class="legend-line single"></span> Lintas Tunggal</div><div><span class="legend-selected"></span> Terpilih</div></div></div></section>
-
-          <aside class="properties-card"><div class="properties-head"><div><span class="eyebrow">INSPEKTOR</span><h2>Properti</h2></div><button class="kebab">•••</button></div><div class="property-tabs"><button class="property-tab active" data-property="stasiun">Stasiun</button><button class="property-tab" data-property="petak">Petak Jalan</button></div>
-            <div class="property-body" id="property-stasiun"><div class="selected-object"><div class="station-icon">●</div><div><strong id="prop-title">Belum dipilih</strong><span>Pilih satu baris untuk mengubah atau menghapus.</span></div></div><div class="property-grid editable-grid"><label>Kode<input id="prop-kode" maxlength="8" placeholder="—" disabled></label><label>Nama<input id="prop-nama" placeholder="—" disabled></label><label>Km<input id="prop-km" type="number" step="0.001" min="0" placeholder="—" disabled></label><label>Jumlah Jalur<input id="prop-jalur" type="number" min="1" step="1" placeholder="—" disabled></label><label class="full">Jenis<select id="prop-jenis" disabled><option>Stasiun</option><option>Perhentian</option></select></label></div><div class="property-actions"><button id="btn-hapus-stasiun" class="danger-action" disabled>Hapus</button><button id="btn-simpan-stasiun" class="primary-action" disabled>Simpan Perubahan</button></div><div class="property-note">Perubahan disimpan ke proyek aktif dan tabel otomatis diurutkan berdasarkan Km.</div></div>
-            <div class="property-body hidden" id="property-petak"><div class="selected-object"><div class="station-icon line-icon">═</div><div><strong id="prop-petak-title">Belum dipilih</strong><span>Pilih satu petak pada tabel.</span></div></div><div class="property-grid editable-grid"><label>Dari<select id="prop-dari" disabled></select></label><label>Ke<select id="prop-ke" disabled></select></label><label>Jarak (km)<input id="prop-jarak" type="number" min="0.001" step="0.001" placeholder="—" disabled></label><label>Jalur<select id="prop-jenis-jalur" disabled><option value="Tunggal">Lintas Tunggal</option><option value="Ganda">Lintas Ganda</option></select></label><label class="full">Kecepatan Maksimum<input id="prop-vmax" type="number" min="1" step="1" placeholder="—" disabled></label></div><div class="property-actions"><button id="btn-hapus-petak" class="danger-action" disabled>Hapus</button><button id="btn-simpan-petak" class="primary-action" disabled>Simpan Perubahan</button></div></div>
-          </aside>
-
-          <section class="bottom-card data-card"><div class="bottom-tabs"><button class="bottom-tab active" data-bottom="jaringan">Data Jaringan <span id="badge-network">0</span></button><button class="bottom-tab" data-bottom="kereta">Daftar Kereta <span>0</span></button><button class="bottom-tab" data-bottom="proyek">Informasi Proyek</button></div><div class="bottom-panel" id="bottom-jaringan"><div class="panel-toolbar"><div class="segmented"><button class="segment active" data-list="stasiun">Stasiun <span id="jumlah-stasiun">0</span></button><button class="segment" data-list="petak">Petak Jalan <span id="jumlah-petak">0</span></button></div><div class="panel-toolbar-spacer"></div><button class="small-btn" id="btn-urut-stasiun">↕ Urutkan Km</button><button class="small-btn" id="btn-tambah-stasiun">＋ Stasiun</button><button class="small-btn" id="btn-tambah-petak">＋ Petak</button></div><div class="table-wrap" id="table-stasiun-wrap"><table><thead><tr><th>Kode</th><th>Nama</th><th>Km</th><th>Jalur</th><th>Jenis</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tabel-stasiun"></tbody></table><div class="table-empty" id="empty-stasiun">Belum ada data stasiun.</div></div><div class="table-wrap hidden" id="table-petak-wrap"><table><thead><tr><th>Dari</th><th>Ke</th><th>Jarak</th><th>Jenis Jalur</th><th>Vmax</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tabel-petak"></tbody></table><div class="table-empty" id="empty-petak">Belum ada data Petak Jalan.</div></div></div><div class="bottom-panel hidden placeholder-panel" id="bottom-kereta"><div class="placeholder-icon">▤</div><strong>Daftar Kereta belum tersedia</strong><span>Bagian ini sudah disiapkan dalam UI. Datanya akan diisi saat generator jadwal dikerjakan.</span></div><div class="bottom-panel hidden project-info" id="bottom-proyek"><label>Nama Proyek<input id="nama-proyek" type="text" value="Proyek TTC"></label><div class="info-stat"><span>Format</span><strong>TTC-Project JSON</strong></div><div class="info-stat"><span>Versi data</span><strong>1</strong></div><div class="info-stat"><span>Status</span><strong class="ok-text">Tahap 2 aktif</strong></div></div></section>
-          <section class="bottom-card log-card"><div class="log-head"><div><span class="eyebrow">AKTIVITAS</span><h2>Log Simulasi</h2></div><button id="btn-clear-log" class="text-btn">Bersihkan</button></div><div class="log-list" id="log-list"></div></section>
-        </main>
-        <footer class="statusbar"><div><strong>TTC v0.1</strong> <span class="alpha">Tahap 2</span></div><div id="status-text"><span class="status-dot"></span> Siap</div><div id="status-counts">0 stasiun · 0 petak</div></footer>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><span>T</span><span class="brand-red">T</span><span>C</span></div>
+        <div><div class="brand-name">Train Traffic Simulator</div><div class="brand-tagline">Perencanaan · Simulasi · Operasi</div></div>
       </div>
+
+      <div class="nav-section-title">PRASARANA</div>
+      <nav class="nav-menu">
+        <button class="nav-item active" data-view="beranda"><span class="nav-icon">⌂</span><span>Beranda</span></button>
+        <button class="nav-item" data-view="peta"><span class="nav-icon">⌘</span><span>Peta Jalur</span></button>
+        <button class="nav-item" data-view="stasiun"><span class="nav-icon">●</span><span>Stasiun</span><span class="nav-badge" id="nav-jml-stasiun">0</span></button>
+        <button class="nav-item" data-view="petak"><span class="nav-icon">═</span><span>Petak Jalan</span><span class="nav-badge" id="nav-jml-petak">0</span></button>
+        <button class="nav-item" data-view="emplasemen"><span class="nav-icon">⊟</span><span>Emplasemen</span><span class="nav-badge" id="nav-jml-emplasemen">0</span></button>
+        <button class="nav-item" data-view="sinyal"><span class="nav-icon">◉</span><span>Sinyal</span><span class="nav-badge" id="nav-jml-sinyal">0</span></button>
+        <button class="nav-item" data-view="blok"><span class="nav-icon">▮</span><span>Blok &amp; Kapasitas</span><span class="nav-badge" id="nav-jml-blok">0</span></button>
+      </nav>
+
+      <div class="nav-section-title">SARANA &amp; OPERASI</div>
+      <nav class="nav-menu">
+        <button class="nav-item" data-view="sarana"><span class="nav-icon">▤</span><span>Sarana</span><span class="nav-badge" id="nav-jml-sarana">0</span></button>
+        <button class="nav-item" data-view="pola"><span class="nav-icon">◈</span><span>Pola Operasi</span><span class="nav-badge" id="nav-jml-pola">0</span></button>
+        <button class="nav-item" data-view="jadwal"><span class="nav-icon">≡</span><span>Jadwal</span><span class="nav-badge" id="nav-jml-ka">0</span></button>
+        <button class="nav-item" data-view="gapeka"><span class="nav-icon">╱</span><span>GAPEKA</span></button>
+        <button class="nav-item" data-view="konflik"><span class="nav-icon">⚠</span><span>Konflik</span><span class="nav-badge warn" id="nav-jml-konflik">0</span></button>
+        <button class="nav-item" data-view="simulasi"><span class="nav-icon">▶</span><span>Simulasi Jadwal</span></button>
+        <button class="nav-item" data-view="simsinyal"><span class="nav-icon">◎</span><span>Simulasi Sinyal</span></button>
+      </nav>
+
+      <div class="nav-section-title">PENGATURAN</div>
+      <nav class="nav-menu secondary">
+        <button class="nav-item" data-view="parameter"><span class="nav-icon">⚙</span><span>Parameter</span></button>
+        <button class="nav-item" data-view="ekspor"><span class="nav-icon">⇧</span><span>Ekspor</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="rail-silhouette" aria-hidden="true">▰▰▰▰▰</div>
+        <div class="footer-copy">Untuk perencanaan operasi<br>kereta api yang lebih terukur</div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+
+      <header class="toolbar">
+        <div class="toolbar-group">
+          <button class="tool-btn" id="btn-baru"><span>＋</span> Baru</button>
+          <label class="tool-btn" for="file-buka"><span>⌂</span> Buka</label>
+          <input id="file-buka" type="file" accept=".json,application/json" hidden>
+          <button class="tool-btn primary" id="btn-simpan"><span>▣</span> Simpan</button>
+          <button class="tool-btn" id="btn-contoh"><span>◫</span> Contoh</button>
+        </div>
+        <div class="toolbar-separator"></div>
+        <div class="toolbar-group">
+          <button class="tool-btn accent" id="btn-buat-jadwal"><span>≡</span> Buat Jadwal</button>
+          <button class="tool-btn" id="btn-periksa-konflik"><span>⚠</span> Periksa Konflik</button>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <div class="project-chip"><span class="chip-label">Proyek aktif</span><strong id="toolbar-nama-proyek">Proyek TTC</strong></div>
+      </header>
+
+      <div class="validation-banner hidden" id="validation-banner" role="alert"></div>
+
+      <main class="content-area" id="content">
+
+        <!-- ══════════ BERANDA ══════════ -->
+        <section class="view active" id="view-beranda">
+          <div class="page-head"><div><div class="eyebrow">RINGKASAN</div><h1>Beranda</h1><p class="sub">Kondisi proyek saat ini dan langkah berikutnya.</p></div></div>
+          <div class="kpi-row">
+            <div class="kpi"><span class="kpi-label">Stasiun</span><strong id="kpi-stasiun">0</strong><span class="kpi-unit">titik</span></div>
+            <div class="kpi"><span class="kpi-label">Petak Jalan</span><strong id="kpi-petak">0</strong><span class="kpi-unit">ruas</span></div>
+            <div class="kpi"><span class="kpi-label">Panjang Lintas</span><strong id="kpi-panjang">0</strong><span class="kpi-unit">km</span></div>
+            <div class="kpi"><span class="kpi-label">Sarana</span><strong id="kpi-sarana">0</strong><span class="kpi-unit">tipe</span></div>
+            <div class="kpi"><span class="kpi-label">Perjalanan KA</span><strong id="kpi-ka">0</strong><span class="kpi-unit">KA/hari</span></div>
+            <div class="kpi alert"><span class="kpi-label">Konflik</span><strong id="kpi-konflik">0</strong><span class="kpi-unit">temuan</span></div>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <h2>Langkah kerja</h2>
+              <ol class="langkah" id="langkah-list"></ol>
+            </div>
+            <div class="card">
+              <h2>Informasi proyek</h2>
+              <label class="field"><span>Nama proyek</span><input id="nama-proyek" type="text"></label>
+              <div class="info-row"><span>Format berkas</span><strong>TTC-Project JSON v2</strong></div>
+              <div class="info-row"><span>Mesin waktu tempuh</span><strong>Dinamika gerak (Davis + gaya tarik)</strong></div>
+              <div class="info-row"><span>Dibuat</span><strong id="info-dibuat">—</strong></div>
+              <p class="note">Semua data tersimpan di berkas <code>.json</code> milik Anda sendiri. Tidak ada data yang dikirim ke mana pun.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ PETA JALUR ══════════ -->
+        <section class="view" id="view-peta">
+          <div class="page-head"><div><div class="eyebrow">PRASARANA</div><h1>Peta Jalur</h1><p class="sub" id="peta-sub">Skema lintas berskala jarak.</p></div>
+            <div class="head-actions"><button class="small-btn" id="btn-peta-refresh">↻ Gambar ulang</button></div></div>
+          <div class="card map-card">
+            <div class="network-canvas-wrap">
+              <svg id="network-svg" viewBox="0 0 1100 420" preserveAspectRatio="xMidYMid meet"></svg>
+              <div class="empty-map" id="empty-map"><div class="empty-icon">╍╍╍●╍╍╍</div><strong>Belum ada jaringan</strong><span>Muat <b>Contoh</b> atau tambahkan stasiun terlebih dahulu.</span></div>
+              <div class="legend-box"><strong>Legenda</strong>
+                <div><span class="legend-dot"></span> Stasiun</div>
+                <div><span class="legend-line double"></span> Lintas ganda</div>
+                <div><span class="legend-line single"></span> Lintas tunggal</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ STASIUN ══════════ -->
+        <section class="view" id="view-stasiun">
+          <div class="page-head"><div><div class="eyebrow">PRASARANA</div><h1>Stasiun</h1><p class="sub">Titik pelayanan dan emplasemen. Km menentukan urutan lintas.</p></div>
+            <div class="head-actions"><button class="small-btn" id="btn-urut-stasiun">↕ Urutkan Km</button><button class="small-btn primary" id="btn-tambah-stasiun">＋ Stasiun</button></div></div>
+          <div class="card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Kode</th><th>Nama</th><th class="num">Km</th><th class="num">Jalur</th><th>Jenis</th><th class="aksi">Aksi</th></tr></thead>
+                <tbody id="tabel-stasiun"></tbody>
+              </table>
+              <div class="table-empty" id="empty-stasiun">Belum ada data stasiun.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ PETAK JALAN ══════════ -->
+        <section class="view" id="view-petak">
+          <div class="page-head"><div><div class="eyebrow">PRASARANA</div><h1>Petak Jalan</h1><p class="sub">Ruas antara dua stasiun bersebelahan: jarak, jenis jalur, kecepatan, tanjakan, lengkung.</p></div>
+            <div class="head-actions"><button class="small-btn" id="btn-petak-otomatis">⚡ Buat dari urutan Km</button><button class="small-btn primary" id="btn-tambah-petak">＋ Petak</button></div></div>
+          <div class="card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Dari</th><th>Ke</th><th class="num">Jarak</th><th>Jalur</th><th class="num">Vmax</th><th class="num">Gradien</th><th class="num">Radius</th><th class="aksi">Aksi</th></tr></thead>
+                <tbody id="tabel-petak"></tbody>
+              </table>
+              <div class="table-empty" id="empty-petak">Belum ada petak jalan.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ EMPLASEMEN ══════════ -->
+        <section class="view" id="view-emplasemen">
+          <div class="page-head"><div><div class="eyebrow">PRASARANA</div><h1>Emplasemen</h1>
+            <p class="sub">Stasiun sebagai kumpulan elemen: jalur dan wesel. Rute disusun otomatis dari tata letaknya, dan dua rute yang berbagi satu elemen tidak boleh terkunci bersamaan.</p></div>
+            <div class="head-actions">
+              <button class="small-btn" id="btn-emp-semua">⚡ Bangun semua dari jumlah jalur</button>
+              <button class="small-btn" id="btn-emp-hapus">Hapus layout stasiun ini</button>
+            </div></div>
+
+          <div class="kpi-row kpi-4">
+            <div class="kpi"><span class="kpi-label">Stasiun digambar</span><strong id="kpi-emp-st">0</strong><span class="kpi-unit">dari <span id="kpi-emp-total">0</span></span></div>
+            <div class="kpi"><span class="kpi-label">Jalur</span><strong id="kpi-emp-jalur">0</strong><span class="kpi-unit">seluruh lintas</span></div>
+            <div class="kpi"><span class="kpi-label">Wesel</span><strong id="kpi-emp-wesel">0</strong><span class="kpi-unit">seluruh lintas</span></div>
+            <div class="kpi"><span class="kpi-label">Rute tersusun</span><strong id="kpi-emp-rute">0</strong><span class="kpi-unit">masuk &amp; keluar</span></div>
+          </div>
+
+          <div class="card">
+            <div class="form-row">
+              <label class="field"><span>Stasiun</span><select id="emp-stasiun"></select></label>
+              <label class="field"><span>Template emplasemen</span><select id="emp-template"></select></label>
+              <label class="field"><span>Panjang efektif jalur (m)</span><input id="emp-panjang" type="number" min="50" step="10" value="250"></label>
+              <label class="field"><span>Tipe wesel</span><select id="emp-wesel"></select></label>
+              <label class="field"><span>Lintas</span><select id="emp-ganda"><option value="1">Ganda — hilir &amp; hulu terpisah</option><option value="0">Tunggal — jalur dipakai dua arah</option></select></label>
+              <button class="small-btn primary" id="btn-emp-terapkan">Terapkan template</button>
+            </div>
+            <p class="note" id="emp-note">Template hanya kerangka awal. Setelah diterapkan, ubah nama jalur, panjang efektif, dan tipe wesel sesuai emplasemen sebenarnya.</p>
+          </div>
+
+          <div class="card">
+            <h2>Skema emplasemen <span class="count" id="emp-judul">—</span></h2>
+            <div class="skema-wrap"><svg id="skema-emplasemen" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+          </div>
+
+          <div class="two-col">
+            <div class="card">
+              <h2>Jalur <span class="count" id="count-emp-jalur">0</span></h2>
+              <div class="table-wrap">
+                <table class="data-table compact">
+                  <thead><tr><th>No</th><th>Nama</th><th class="num">Panjang efektif</th><th>Peron</th><th>Arah lazim</th></tr></thead>
+                  <tbody id="tabel-emp-jalur"></tbody>
+                </table>
+                <div class="table-empty" id="empty-emp-jalur">Stasiun ini belum punya layout.</div>
+              </div>
+              <p class="note">Panjang efektif dipakai memeriksa apakah rangkaian muat. Arah lazim menentukan jalur mana yang dipilih untuk KA hilir dan hulu.</p>
+            </div>
+            <div class="card">
+              <h2>Wesel <span class="count" id="count-emp-wesel">0</span></h2>
+              <div class="table-wrap">
+                <table class="data-table compact">
+                  <thead><tr><th>Nomor</th><th>Sisi</th><th>Kelompok</th><th>Tipe</th><th class="num">Kecepatan belok</th></tr></thead>
+                  <tbody id="tabel-emp-wesel"></tbody>
+                </table>
+                <div class="table-empty" id="empty-emp-wesel">Belum ada wesel.</div>
+              </div>
+              <p class="note">Kecepatan belok membatasi kecepatan rute yang melewatinya — KA yang masuk jalur belok memang berjalan lebih lambat.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Rute <span class="count" id="count-emp-rute">0</span></h2>
+            <div class="table-wrap tall">
+              <table class="data-table compact">
+                <thead><tr><th>Nama rute</th><th>Jenis</th><th>Arah</th><th>Jalur</th><th class="num">Kecepatan</th><th>Elemen yang dikunci</th><th>Bentrok dengan</th></tr></thead>
+                <tbody id="tabel-emp-rute"></tbody>
+              </table>
+              <div class="table-empty" id="empty-emp-rute">Belum ada rute.</div>
+            </div>
+            <p class="note">Kolom terakhir menunjukkan rute lain yang tidak boleh terkunci bersamaan karena berbagi elemen. Inilah yang diperiksa saat menekan <b>Periksa Konflik</b>.</p>
+          </div>
+        </section>
+
+        <!-- ══════════ SINYAL ══════════ -->
+        <section class="view" id="view-sinyal">
+          <div class="page-head"><div><div class="eyebrow">PRASARANA</div><h1>Sinyal</h1>
+            <p class="sub">Sinyal adalah data utama; petak blok disimpulkan dari letak sinyal yang berurutan. Isi nomor sinyal yang sebenarnya sesuai skema sinyal lintas Anda.</p></div>
+            <div class="head-actions">
+              <select id="filter-sinyal-arah" class="mini-select"><option value="">Semua arah</option><option value="hilir">Hilir</option><option value="hulu">Hulu</option></select>
+              <select id="filter-sinyal-jenis" class="mini-select"><option value="">Semua jenis</option><option value="masuk">Masuk</option><option value="keluar">Keluar</option><option value="blok">Blok antara</option><option value="muka">Muka</option><option value="langsir">Langsir</option></select>
+              <button class="small-btn" id="btn-sinyal-otomatis">⚡ Bangun otomatis</button>
+              <button class="small-btn" id="btn-sinyal-muka">＋ Sinyal muka</button>
+              <button class="small-btn primary" id="btn-tambah-sinyal">＋ Sinyal</button>
+            </div></div>
+
+          <div class="kpi-row kpi-4">
+            <div class="kpi"><span class="kpi-label">Jumlah sinyal</span><strong id="kpi-sg-jml">0</strong><span class="kpi-unit">buah</span></div>
+            <div class="kpi"><span class="kpi-label">Blok arah hilir</span><strong id="kpi-sg-hilir">0</strong><span class="kpi-unit">petak blok</span></div>
+            <div class="kpi"><span class="kpi-label">Blok arah hulu</span><strong id="kpi-sg-hulu">0</strong><span class="kpi-unit">petak blok</span></div>
+            <div class="kpi"><span class="kpi-label">Blok terpendek</span><strong id="kpi-sg-pendek">—</strong><span class="kpi-unit" id="kpi-sg-pendek-nama">—</span></div>
+          </div>
+
+          <div class="card">
+            <h2>Skema sinyal sepanjang lintas</h2>
+            <div class="skema-wrap"><svg id="skema-sinyal" viewBox="0 0 1100 150" preserveAspectRatio="xMidYMid meet"></svg></div>
+            <p class="note">Titik di atas garis adalah sinyal arah hilir, di bawah garis arah hulu. Bentuk kotak = sinyal masuk, bulat = sinyal blok antara, segitiga = sinyal keluar, cincin = sinyal muka.</p>
+          </div>
+
+          <div class="card">
+            <h2>Daftar sinyal <span class="count" id="count-sinyal">0</span></h2>
+            <div class="table-wrap tall">
+              <table class="data-table compact">
+                <thead><tr><th>Nomor</th><th class="num">Km</th><th>Jenis</th><th>Arah</th><th class="num">Aspek</th><th>Stasiun</th><th>Melindungi</th><th class="aksi">Aksi</th></tr></thead>
+                <tbody id="tabel-sinyal"></tbody>
+              </table>
+              <div class="table-empty" id="empty-sinyal">Belum ada sinyal. Tekan <b>Bangun otomatis</b> untuk kerangka awal, lalu ganti nomornya.</div>
+            </div>
+          </div>
+
+          <div class="card"><h2>Pemeriksaan letak sinyal</h2><div id="periksa-sinyal" class="periksa-list"></div></div>
+        </section>
+
+        <!-- ══════════ SINYAL & BLOK ══════════ -->
+        <section class="view" id="view-blok">
+          <div class="page-head"><div><div class="eyebrow">PRASARANA</div><h1>Blok &amp; Kapasitas</h1>
+            <p class="sub">Headway minimum tidak ditetapkan, melainkan dihitung dari okupansi blok — blocking time. Blok terpanjang menentukan kapasitas petak.</p></div>
+            <div class="head-actions">
+              <label class="mini-field">Bagi rata <input id="blok-target" class="mini-input num" type="number" min="100" step="50" value="1000"> m</label>
+              <button class="small-btn" id="btn-blok-bagi">⚡ Terapkan ke semua petak</button>
+              <button class="small-btn primary" id="btn-blok-hitung">↻ Hitung ulang</button>
+            </div></div>
+
+          <div class="kpi-row kpi-4">
+            <div class="kpi"><span class="kpi-label">Petak berblok</span><strong id="kpi-blok-petak">0</strong><span class="kpi-unit">dari <span id="kpi-blok-total">0</span></span></div>
+            <div class="kpi"><span class="kpi-label">Headway terketat</span><strong id="kpi-blok-headway">—</strong><span class="kpi-unit" id="kpi-blok-dimana">—</span></div>
+            <div class="kpi"><span class="kpi-label">Kapasitas lintas</span><strong id="kpi-blok-kapasitas">—</strong><span class="kpi-unit">KA/jam maksimum</span></div>
+            <div class="kpi"><span class="kpi-label">Headway dipakai jadwal</span><strong id="kpi-blok-pakai">—</strong><span class="kpi-unit" id="kpi-blok-status">—</span></div>
+          </div>
+
+          <div class="card">
+            <h2>Kapasitas per petak <span class="count" id="count-blok">0</span></h2>
+            <div class="table-wrap tall">
+              <table class="data-table compact">
+                <thead><tr><th>Petak</th><th>Jalur</th><th class="num">Jarak</th><th class="num">Blok</th><th class="num">Panjang blok</th><th class="num">Headway hilir</th><th class="num">Headway hulu</th><th class="num">Kapasitas</th><th>Blok penentu</th><th class="aksi">Aksi</th></tr></thead>
+                <tbody id="tabel-blok"></tbody>
+              </table>
+              <div class="table-empty" id="empty-blok">Belum ada petak jalan.</div>
+            </div>
+            <p class="note">Baris bertanda merah adalah petak paling sempit — petak itulah yang membatasi kapasitas seluruh lintas.</p>
+          </div>
+
+          <div class="two-col">
+            <div class="card">
+              <h2>Skema blok <span class="count" id="skema-judul">—</span></h2>
+              <div class="skema-wrap"><svg id="skema-blok" viewBox="0 0 700 120" preserveAspectRatio="xMidYMid meet"></svg></div>
+              <p class="note" id="skema-note">Pilih satu petak pada tabel di atas untuk melihat skema blok dan tangga blocking time-nya.</p>
+            </div>
+            <div class="card">
+              <h2>Tangga blocking time</h2>
+              <div class="skema-wrap"><svg id="tangga-blok" viewBox="0 0 700 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+              <div id="rincian-blok" class="rincian-blok"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Parameter persinyalan</h2>
+            <div class="form-grid">
+              <label class="field"><span>Pembentukan rute (detik)</span><input id="sg-rute" type="number" min="0" step="1"></label>
+              <label class="field"><span>Waktu pandang sinyal (detik)</span><input id="sg-pandang" type="number" min="0" step="1"></label>
+              <label class="field"><span>Pelepasan blok (detik)</span><input id="sg-lepas" type="number" min="0" step="1"></label>
+              <label class="field"><span>Kecepatan pembebasan minimum (km/jam)</span><input id="sg-vbebas" type="number" min="5" step="1"></label>
+              <label class="field"><span>Cadangan tambahan per blok (detik)</span><input id="sg-margin" type="number" min="0" step="1"></label>
+            </div>
+            <p class="note">Blocking time satu blok = pembentukan rute + waktu pandang + waktu pendekat (menempuh blok sebelumnya) + waktu tempuh blok + waktu pembebasan (panjang rangkaian) + pelepasan. Headway minimum petak adalah blocking time terbesar di antara bloknya.</p>
+          </div>
+        </section>
+
+        <!-- ══════════ SARANA ══════════ -->
+        <section class="view" id="view-sarana">
+          <div class="page-head"><div><div class="eyebrow">SARANA</div><h1>Sarana</h1><p class="sub">Data rangkaian yang dipakai mesin dinamika untuk menghitung waktu tempuh.</p></div>
+            <div class="head-actions"><button class="small-btn" id="btn-sarana-bawaan">↻ Muat bawaan</button><button class="small-btn primary" id="btn-tambah-sarana">＋ Sarana</button></div></div>
+          <div class="card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Nama</th><th>Jenis</th><th class="num">Kereta</th><th class="num">Massa dinas</th><th class="num">Daya</th><th class="num">a</th><th class="num">b</th><th class="num">Vmax</th><th class="aksi">Aksi</th></tr></thead>
+                <tbody id="tabel-sarana"></tbody>
+              </table>
+              <div class="table-empty" id="empty-sarana">Belum ada data sarana.</div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Uji cepat waktu tempuh</h2>
+            <p class="note">Hitung waktu tempuh satu petak memakai mesin dinamika, untuk memeriksa kewajaran data sarana.</p>
+            <div class="form-row">
+              <label class="field"><span>Sarana</span><select id="uji-sarana"></select></label>
+              <label class="field"><span>Dari</span><select id="uji-dari"></select></label>
+              <label class="field"><span>Ke</span><select id="uji-ke"></select></label>
+              <label class="field"><span>Awal</span><select id="uji-vawal"><option value="0">Berhenti</option><option value="1">Berjalan</option></select></label>
+              <label class="field"><span>Akhir</span><select id="uji-vakhir"><option value="0">Berhenti</option><option value="1">Berjalan</option></select></label>
+              <button class="small-btn primary" id="btn-uji-hitung">Hitung</button>
+            </div>
+            <div id="uji-hasil" class="uji-hasil"></div>
+          </div>
+        </section>
+
+        <!-- ══════════ POLA OPERASI ══════════ -->
+        <section class="view" id="view-pola">
+          <div class="page-head"><div><div class="eyebrow">OPERASI</div><h1>Pola Operasi</h1><p class="sub">Relasi, jam operasi, dan headway. Dari sini jadwal dibangkitkan otomatis.</p></div>
+            <div class="head-actions"><button class="small-btn primary" id="btn-tambah-pola">＋ Pola</button></div></div>
+          <div class="card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Nama</th><th>Sarana</th><th>Relasi</th><th>Jam</th><th class="num">Headway</th><th>Berhenti</th><th class="num">Nomor</th><th class="aksi">Aksi</th></tr></thead>
+                <tbody id="tabel-pola"></tbody>
+              </table>
+              <div class="table-empty" id="empty-pola">Belum ada pola operasi.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ JADWAL ══════════ -->
+        <section class="view" id="view-jadwal">
+          <div class="page-head"><div><div class="eyebrow">HASIL</div><h1>Jadwal</h1><p class="sub" id="jadwal-sub">Belum ada jadwal. Tekan “Buat Jadwal” pada bilah atas.</p></div>
+            <div class="head-actions">
+              <select id="filter-arah" class="mini-select"><option value="">Semua arah</option><option value="hilir">Hilir</option><option value="hulu">Hulu</option></select>
+              <input id="cari-ka" class="mini-input" placeholder="Cari nomor KA…">
+            </div></div>
+          <div class="split">
+            <div class="card">
+              <h2>Daftar Perjalanan <span class="count" id="count-ka">0</span></h2>
+              <div class="table-wrap tall">
+                <table class="data-table compact">
+                  <thead><tr><th>KA</th><th>Arah</th><th>Relasi</th><th class="num">Berangkat</th><th class="num">Tiba</th><th class="num">Waktu</th><th class="num">V rata</th></tr></thead>
+                  <tbody id="tabel-ka"></tbody>
+                </table>
+                <div class="table-empty" id="empty-ka">Belum ada perjalanan.</div>
+              </div>
+            </div>
+            <div class="card">
+              <h2>Daftar Waktu <span class="count" id="dw-nomor">—</span></h2>
+              <div class="table-wrap tall">
+                <table class="data-table compact">
+                  <thead><tr><th>Stasiun</th><th class="num">Km</th><th class="num">Datang</th><th class="num">Berangkat</th><th>Ket.</th></tr></thead>
+                  <tbody id="tabel-dw"></tbody>
+                </table>
+                <div class="table-empty" id="empty-dw">Pilih satu KA pada tabel di kiri.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ GAPEKA ══════════ -->
+        <section class="view" id="view-gapeka">
+          <div class="page-head"><div><div class="eyebrow">GRAFIK</div><h1>GAPEKA</h1><p class="sub">Sumbu mendatar waktu, sumbu tegak stasiun berskala jarak.</p></div>
+            <div class="head-actions">
+              <label class="mini-field">Dari jam <input id="gp-jam-mulai" class="mini-input num" type="number" min="0" max="23" value="4"></label>
+              <label class="mini-field">sampai <input id="gp-jam-akhir" class="mini-input num" type="number" min="1" max="30" value="24"></label>
+              <button class="small-btn" id="btn-gp-zoom-out">−</button>
+              <button class="small-btn" id="btn-gp-zoom-in">＋</button>
+              <button class="small-btn" id="btn-gp-gambar">↻ Gambar</button>
+            </div></div>
+          <div class="card gapeka-card">
+            <div class="gapeka-wrap">
+              <svg id="gapeka-label" class="gapeka-label"></svg>
+              <div class="gapeka-scroll" id="gapeka-scroll"><svg id="gapeka-graf"></svg></div>
+            </div>
+            <div class="gapeka-kaki">
+              <span class="lg"><i class="ln hilir"></i> Hilir</span>
+              <span class="lg"><i class="ln hulu"></i> Hulu</span>
+              <span class="lg"><i class="dot berat"></i> Konflik berat</span>
+              <span class="lg"><i class="dot sedang"></i> Konflik sedang</span>
+              <span class="lg" id="gp-info">Klik garis KA untuk menyorot.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ KONFLIK ══════════ -->
+        <section class="view" id="view-konflik">
+          <div class="page-head"><div><div class="eyebrow">PEMERIKSAAN</div><h1>Konflik Perjalanan</h1><p class="sub" id="konflik-sub">Belum diperiksa.</p></div>
+            <div class="head-actions"><button class="small-btn primary" id="btn-konflik-ulang">↻ Periksa ulang</button></div></div>
+          <div class="card">
+            <div class="table-wrap tall">
+              <table class="data-table compact">
+                <thead><tr><th class="num">Waktu</th><th>Jenis</th><th>Bobot</th><th>Lokasi</th><th>KA</th><th>Keterangan</th></tr></thead>
+                <tbody id="tabel-konflik"></tbody>
+              </table>
+              <div class="table-empty" id="empty-konflik">Tidak ada konflik ditemukan.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ SIMULASI ══════════ -->
+        <section class="view" id="view-simulasi">
+          <div class="page-head"><div><div class="eyebrow">OPERASI</div><h1>Simulasi Berjalan</h1><p class="sub">Jalankan jam simulasi dan lihat posisi tiap KA bergerak di sepanjang lintas.</p></div></div>
+          <div class="card sim-card">
+            <div class="sim-bar">
+              <button class="sim-btn play" id="btn-sim-play">▶ Jalan</button>
+              <button class="sim-btn" id="btn-sim-pause">❚❚ Jeda</button>
+              <button class="sim-btn" id="btn-sim-reset">↺ Ulang</button>
+              <div class="sim-clock" id="sim-jam">00:00:00</div>
+              <label class="mini-field">Kecepatan
+                <select id="sim-kecepatan" class="mini-select">
+                  <option value="30">30×</option><option value="60" selected>60×</option>
+                  <option value="120">120×</option><option value="300">300×</option>
+                </select>
+              </label>
+              <input type="range" id="sim-slider" min="0" max="86400" value="0" step="30" class="sim-slider">
+            </div>
+            <div class="sim-panel">
+              <div class="sim-graf">
+                <div class="gapeka-wrap small">
+                  <svg id="sim-label" class="gapeka-label"></svg>
+                  <div class="gapeka-scroll" id="sim-scroll"><svg id="sim-graf"></svg></div>
+                </div>
+              </div>
+              <div class="sim-daftar">
+                <h2>KA di lintas <span class="count" id="sim-jml">0</span></h2>
+                <div class="table-wrap tall">
+                  <table class="data-table compact">
+                    <thead><tr><th>KA</th><th>Arah</th><th class="num">Km</th><th>Status</th></tr></thead>
+                    <tbody id="tabel-sim"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ SIMULASI SINYAL ══════════ -->
+        <section class="view" id="view-simsinyal">
+          <div class="page-head"><div><div class="eyebrow">OPERASI</div><h1>Simulasi Sinyal</h1>
+            <p class="sub">Kereta dijalankan tunduk pada aspek sinyal, bukan sekadar mengikuti jadwal. Di sini terlihat keterlambatan yang benar-benar terjadi bila jadwal dijalankan di atas persinyalan yang ada.</p></div></div>
+
+          <div class="card sim-card">
+            <div class="sim-bar">
+              <button class="sim-btn play" id="btn-ss-play">▶ Jalan</button>
+              <button class="sim-btn" id="btn-ss-pause">❚❚ Jeda</button>
+              <button class="sim-btn" id="btn-ss-reset">↺ Ulang</button>
+              <div class="sim-clock" id="ss-jam">00:00:00</div>
+              <label class="mini-field">Mulai <input id="ss-mulai" class="mini-input" type="time" value="05:00"></label>
+              <label class="mini-field">Kecepatan
+                <select id="ss-kecepatan" class="mini-select"><option value="10">10×</option><option value="30" selected>30×</option><option value="60">60×</option><option value="120">120×</option></select>
+              </label>
+              <span class="spacer"></span>
+              <label class="mini-field">Tahan KA <input id="ss-tahan-ka" class="mini-input" placeholder="nomor" style="width:78px"></label>
+              <label class="mini-field"><input id="ss-tahan-menit" class="mini-input num" type="number" min="1" step="1" value="5"> mnt</label>
+              <button class="small-btn" id="btn-ss-tahan">Tahan</button>
+            </div>
+
+            <div class="kpi-row kpi-4" style="margin:12px 14px">
+              <div class="kpi"><span class="kpi-label">KA di lintas</span><strong id="ss-k-lintas">0</strong><span class="kpi-unit">perjalanan</span></div>
+              <div class="kpi"><span class="kpi-label">Tertahan sinyal</span><strong id="ss-k-tertahan">0</strong><span class="kpi-unit">sekarang</span></div>
+              <div class="kpi"><span class="kpi-label">Keterlambatan terparah</span><strong id="ss-k-parah">0</strong><span class="kpi-unit">menit</span></div>
+              <div class="kpi"><span class="kpi-label">Total penahanan</span><strong id="ss-k-tahan">0</strong><span class="kpi-unit">kejadian sejak mulai</span></div>
+            </div>
+
+            <div style="padding:0 14px 12px">
+              <div class="skema-wrap"><svg id="strip-lintas" viewBox="0 0 1100 190" preserveAspectRatio="xMidYMid meet"></svg></div>
+              <div class="gapeka-kaki" style="border:0;background:transparent;padding:8px 0">
+                <span class="lg"><i class="dot" style="background:#2f9e63"></i> Hijau</span>
+                <span class="lg"><i class="dot" style="background:#d9a441"></i> Kuning</span>
+                <span class="lg"><i class="dot" style="background:#c0402d"></i> Merah</span>
+                <span class="lg"><i class="ln hilir"></i> KA hilir</span>
+                <span class="lg"><i class="ln hulu"></i> KA hulu</span>
+              </div>
+            </div>
+
+            <div style="padding:0 14px 14px">
+              <div class="table-wrap tall">
+                <table class="data-table compact">
+                  <thead><tr><th>KA</th><th>Arah</th><th class="num">Km</th><th class="num">Kecepatan</th><th>Sinyal depan</th><th>Aspek</th><th>Status</th><th class="num">Selisih jadwal</th></tr></thead>
+                  <tbody id="tabel-ss"></tbody>
+                </table>
+                <div class="table-empty" id="empty-ss">Belum ada KA di lintas. Tekan Jalan.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ PARAMETER ══════════ -->
+        <section class="view" id="view-parameter">
+          <div class="page-head"><div><div class="eyebrow">PENGATURAN</div><h1>Parameter Perhitungan</h1><p class="sub">Angka-angka ini dipakai generator jadwal dan pemeriksa konflik.</p></div></div>
+          <div class="card">
+            <div class="form-grid">
+              <label class="field"><span>Waktu berhenti stasiun antara (detik)</span><input id="par-dwell" type="number" min="0" step="5"></label>
+              <label class="field"><span>Waktu balik arah di ujung (detik)</span><input id="par-dwell-ujung" type="number" min="0" step="10"></label>
+              <label class="field"><span>Waktu tambahan / WT (%)</span><input id="par-wt" type="number" min="0" max="50" step="0.5"></label>
+              <label class="field"><span>Headway minimum (detik)</span><input id="par-headway" type="number" min="30" step="10"></label>
+              <label class="field"><span>Waktu jalur harus bebas (detik)</span><input id="par-jalur-bebas" type="number" min="0" step="10"></label>
+            </div>
+            <p class="note"><b>Cara mengalibrasi.</b> Mesin dinamika menghasilkan <i>waktu tempuh murni</i> — hasil fisika gerak tanpa cadangan. Bandingkan dengan GAPEKA yang berlaku, lalu naikkan WT sampai selisihnya menutup. Itulah cadangan waktu yang sebenarnya dipakai di lintas Anda.</p>
+          </div>
+        </section>
+
+        <!-- ══════════ EKSPOR ══════════ -->
+        <section class="view" id="view-ekspor">
+          <div class="page-head"><div><div class="eyebrow">HASIL KERJA</div><h1>Ekspor</h1><p class="sub">Bawa hasilnya keluar dari aplikasi.</p></div></div>
+          <div class="card">
+            <div class="ekspor-grid">
+              <button class="ekspor-btn" id="ek-proyek"><b>Berkas Proyek</b><span>.json — seluruh data, bisa dibuka kembali</span></button>
+              <button class="ekspor-btn" id="ek-dw"><b>Daftar Waktu</b><span>.csv — satu baris per KA per stasiun</span></button>
+              <button class="ekspor-btn" id="ek-matriks"><b>Matriks Jadwal</b><span>.csv — stasiun × nomor KA, gaya daftar waktu cetak</span></button>
+              <button class="ekspor-btn" id="ek-konflik"><b>Daftar Konflik</b><span>.csv — hasil pemeriksaan</span></button>
+              <button class="ekspor-btn" id="ek-svg"><b>GAPEKA (SVG)</b><span>vektor, tajam untuk dicetak sebesar apa pun</span></button>
+              <button class="ekspor-btn" id="ek-png"><b>GAPEKA (PNG)</b><span>gambar biasa untuk paparan</span></button>
+            </div>
+            <p class="note">Berkas CSV memakai titik koma (;) sebagai pemisah, agar langsung rapi saat dibuka Excel berbahasa Indonesia.</p>
+          </div>
+        </section>
+
+      </main>
+
+      <footer class="statusbar">
+        <div><strong>TTC v1.0</strong></div>
+        <div id="status-text"><span class="status-dot"></span> Siap</div>
+        <div id="status-counts">0 stasiun · 0 petak · 0 KA</div>
+      </footer>
     </div>
   </div>
-  <div class="toast" id="toast" role="status"></div>
-  <div class="modal-backdrop hidden" id="modal-stasiun"><div class="modal"><div class="modal-head"><div><span class="eyebrow">DATA JARINGAN</span><h2>Tambah Stasiun</h2></div><button class="modal-close" data-close="modal-stasiun">×</button></div><form id="form-stasiun" class="modal-form"><label>Kode<input id="st-kode" maxlength="8" placeholder="BOO" required></label><label>Nama<input id="st-nama" placeholder="Bogor" required></label><label>Km<input id="st-km" type="number" step="0.001" min="0" placeholder="0" required></label><label>Jumlah Jalur<input id="st-jalur" type="number" min="1" step="1" value="2" required></label><label class="full">Jenis<select id="st-jenis"><option>Stasiun</option><option>Perhentian</option></select></label><div class="modal-actions"><button type="button" class="ghost" data-close="modal-stasiun">Batal</button><button type="submit" class="primary-action">Tambah Stasiun</button></div></form></div></div>
-  <div class="modal-backdrop hidden" id="modal-petak"><div class="modal"><div class="modal-head"><div><span class="eyebrow">DATA JARINGAN</span><h2>Tambah Petak Jalan</h2></div><button class="modal-close" data-close="modal-petak">×</button></div><form id="form-petak" class="modal-form"><label>Dari<select id="petak-dari" required></select></label><label>Ke<select id="petak-ke" required></select></label><label>Jarak (km)<input id="petak-jarak" type="number" min="0.001" step="0.001" required></label><label>Jenis Jalur<select id="petak-jenis"><option value="Tunggal">Lintas Tunggal</option><option value="Ganda">Lintas Ganda</option></select></label><label class="full">Kecepatan Maksimum (km/jam)<input id="petak-vmax" type="number" min="1" step="1" placeholder="70" required></label><div class="modal-actions"><button type="button" class="ghost" data-close="modal-petak">Batal</button><button type="submit" class="primary-action">Tambah Petak Jalan</button></div></form></div></div>
-  <script src="app.js"></script>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<!-- ══════════ MODAL ══════════ -->
+<div class="modal-backdrop hidden" id="modal-stasiun"><div class="modal"><div class="modal-head"><div><span class="eyebrow">PRASARANA</span><h2 id="ms-judul">Tambah Stasiun</h2></div><button class="modal-close" data-close="modal-stasiun">×</button></div>
+<form id="form-stasiun" class="modal-form">
+  <input type="hidden" id="st-asal">
+  <label>Kode<input id="st-kode" maxlength="8" placeholder="BOO" required></label>
+  <label>Nama<input id="st-nama" placeholder="Bogor" required></label>
+  <label>Km<input id="st-km" type="number" step="0.001" min="0" required></label>
+  <label>Jumlah jalur<input id="st-jalur" type="number" min="1" step="1" value="2" required></label>
+  <label class="full">Jenis<select id="st-jenis"><option>Stasiun</option><option>Perhentian</option></select></label>
+  <div class="modal-actions"><button type="button" class="ghost" data-close="modal-stasiun">Batal</button><button type="submit" class="primary-action">Simpan</button></div>
+</form></div></div>
+
+<div class="modal-backdrop hidden" id="modal-petak"><div class="modal"><div class="modal-head"><div><span class="eyebrow">PRASARANA</span><h2 id="mp-judul">Tambah Petak Jalan</h2></div><button class="modal-close" data-close="modal-petak">×</button></div>
+<form id="form-petak" class="modal-form">
+  <input type="hidden" id="pt-index">
+  <label>Dari<select id="pt-dari" required></select></label>
+  <label>Ke<select id="pt-ke" required></select></label>
+  <label>Jarak (km)<input id="pt-jarak" type="number" min="0.001" step="0.001" required></label>
+  <label>Jenis jalur<select id="pt-jenis"><option value="Ganda">Lintas ganda</option><option value="Tunggal">Lintas tunggal</option></select></label>
+  <label>Kecepatan maks (km/jam)<input id="pt-vmax" type="number" min="1" step="1" value="70" required></label>
+  <label>Gradien (‰)<input id="pt-gradien" type="number" step="0.1" value="0"></label>
+  <label class="full">Radius lengkung terkecil (m, 0 = lurus)<input id="pt-radius" type="number" min="0" step="10" value="0"></label>
+  <div class="modal-actions"><button type="button" class="ghost" data-close="modal-petak">Batal</button><button type="submit" class="primary-action">Simpan</button></div>
+</form></div></div>
+
+<div class="modal-backdrop hidden" id="modal-sarana"><div class="modal wide"><div class="modal-head"><div><span class="eyebrow">SARANA</span><h2 id="msr-judul">Tambah Sarana</h2></div><button class="modal-close" data-close="modal-sarana">×</button></div>
+<form id="form-sarana" class="modal-form">
+  <input type="hidden" id="sr-asal">
+  <label>Nama<input id="sr-nama" placeholder="KRL 12 Kereta" required></label>
+  <label>Jenis<select id="sr-jenis"><option>KRL</option><option>Lokomotif</option><option>KRD</option></select></label>
+  <label>Jumlah kereta<input id="sr-jml" type="number" min="1" step="1" value="12" required></label>
+  <label>Massa kosong (ton)<input id="sr-massa" type="number" min="1" step="1" value="350" required></label>
+  <label>Tambahan penumpang (ton)<input id="sr-muatan" type="number" min="0" step="1" value="120"></label>
+  <label>Daya kontinu (kW)<input id="sr-daya" type="number" min="0" step="10" value="4000" required></label>
+  <label>Percepatan awal (m/s²)<input id="sr-acc" type="number" min="0.05" step="0.05" value="0.85" required></label>
+  <label>Perlambatan dinas (m/s²)<input id="sr-dec" type="number" min="0.05" step="0.05" value="0.95" required></label>
+  <label>Kecepatan maks (km/jam)<input id="sr-vmax" type="number" min="10" step="5" value="90" required></label>
+  <label>Panjang rangkaian (m)<input id="sr-panjang" type="number" min="10" step="10" value="240"></label>
+  <div class="full sub-head">Koefisien tahanan Davis — R = m · (A + B·v + C·v²) dalam newton per ton</div>
+  <label>A<input id="sr-da" type="number" step="0.1" value="15.5" required></label>
+  <label>B<input id="sr-db" type="number" step="0.01" value="0.31" required></label>
+  <label>C<input id="sr-dc" type="number" step="0.0001" value="0.0062" required></label>
+  <div class="modal-actions"><button type="button" class="ghost" data-close="modal-sarana">Batal</button><button type="submit" class="primary-action">Simpan</button></div>
+</form></div></div>
+
+<div class="modal-backdrop hidden" id="modal-pola"><div class="modal wide"><div class="modal-head"><div><span class="eyebrow">OPERASI</span><h2 id="mpo-judul">Tambah Pola Operasi</h2></div><button class="modal-close" data-close="modal-pola">×</button></div>
+<form id="form-pola" class="modal-form">
+  <input type="hidden" id="po-asal">
+  <label class="full">Nama pola<input id="po-nama" placeholder="CL Bogor — semua berhenti" required></label>
+  <label>Sarana<select id="po-sarana" required></select></label>
+  <label>Dari<select id="po-dari" required></select></label>
+  <label>Ke<select id="po-ke" required></select></label>
+  <label>Dua arah<select id="po-duaarah"><option value="1">Ya (pp)</option><option value="0">Satu arah saja</option></select></label>
+  <label>Jam mulai<input id="po-mulai" type="time" value="05:00" required></label>
+  <label>Jam akhir<input id="po-akhir" type="time" value="22:00" required></label>
+  <label>Headway (menit)<input id="po-headway" type="number" min="1" step="1" value="10" required></label>
+  <label>Waktu berhenti (detik)<input id="po-dwell" type="number" min="0" step="5" value="30"></label>
+  <label>Nomor KA awal<input id="po-nomor" type="number" min="1" step="1" value="1000" required></label>
+  <label>Loncatan nomor<input id="po-langkah" type="number" min="1" step="1" value="2" required></label>
+  <label class="full">Pola berhenti<select id="po-berhenti-semua"><option value="1">Berhenti di semua stasiun</option><option value="0">Hanya di stasiun terpilih</option></select></label>
+  <div class="full hidden" id="po-pilih-wrap"><div class="sub-head">Pilih stasiun tempat KA berhenti</div><div class="chip-picker" id="po-pilih"></div></div>
+  <div class="modal-actions"><button type="button" class="ghost" data-close="modal-pola">Batal</button><button type="submit" class="primary-action">Simpan</button></div>
+</form></div></div>
+
+<div class="modal-backdrop hidden" id="modal-blok"><div class="modal wide"><div class="modal-head"><div><span class="eyebrow">SINYAL &amp; BLOK</span><h2 id="mb-judul">Blok Petak</h2></div><button class="modal-close" data-close="modal-blok">×</button></div>
+<form id="form-blok" class="modal-form">
+  <input type="hidden" id="bk-index">
+  <div class="full sub-head">Cara cepat</div>
+  <label>Jumlah blok<input id="bk-jumlah" type="number" min="1" max="40" step="1" value="4"></label>
+  <label>&nbsp;<button type="button" class="small-btn" id="bk-bagi">Bagi rata sebanyak itu</button></label>
+  <div class="full sub-head">Daftar blok arah hilir (urut dari stasiun asal). Panjang dalam meter.</div>
+  <div class="full" id="bk-daftar"></div>
+  <div class="full"><button type="button" class="small-btn" id="bk-tambah">＋ Tambah blok</button>
+    <span class="note" id="bk-jumlahkan"></span></div>
+  <label class="full">Arah hulu<select id="bk-hulu"><option value="cermin">Cerminan dari arah hilir (lazim untuk lintas ganda simetris)</option><option value="sama">Sama persis dengan arah hilir</option></select></label>
+  <div class="modal-actions"><button type="button" class="ghost" data-close="modal-blok">Batal</button><button type="submit" class="primary-action">Simpan</button></div>
+</form></div></div>
+
+<div class="modal-backdrop hidden" id="modal-sinyal"><div class="modal"><div class="modal-head"><div><span class="eyebrow">PRASARANA</span><h2 id="msg-judul">Tambah Sinyal</h2></div><button class="modal-close" data-close="modal-sinyal">×</button></div>
+<form id="form-sinyal" class="modal-form">
+  <input type="hidden" id="sy-asal">
+  <label>Nomor sinyal<input id="sy-nomor" placeholder="J12 / B403" required></label>
+  <label>Km<input id="sy-km" type="number" step="0.001" min="0" required></label>
+  <label>Jenis<select id="sy-jenis">
+    <option value="masuk">Sinyal masuk</option><option value="keluar">Sinyal keluar</option>
+    <option value="blok">Sinyal blok antara</option><option value="muka">Sinyal muka</option>
+    <option value="langsir">Sinyal langsir</option></select></label>
+  <label>Arah<select id="sy-arah"><option value="hilir">Hilir (km bertambah)</option><option value="hulu">Hulu (km berkurang)</option></select></label>
+  <label>Jumlah aspek<select id="sy-aspek"><option value="2">2 indikasi</option><option value="3" selected>3 indikasi</option><option value="4">4 indikasi</option></select></label>
+  <label>Stasiun (bila masuk/keluar)<select id="sy-stasiun"><option value="">—</option></select></label>
+  <label class="full">Melindungi sinyal (bila sinyal muka)<select id="sy-lindung"><option value="">—</option></select></label>
+  <div class="modal-actions"><button type="button" class="ghost" data-close="modal-sinyal">Batal</button><button type="submit" class="primary-action">Simpan</button></div>
+</form></div></div>
+
+<div class="modal-backdrop hidden" id="modal-sgotomatis"><div class="modal"><div class="modal-head"><div><span class="eyebrow">PRASARANA</span><h2>Bangun Sinyal Otomatis</h2></div><button class="modal-close" data-close="modal-sgotomatis">×</button></div>
+<form id="form-sgotomatis" class="modal-form">
+  <div class="full note" style="margin:0">Membuat sinyal masuk dan keluar di tiap stasiun untuk kedua arah, serta sinyal blok antara di sepanjang petak. <b>Seluruh sinyal yang ada sekarang akan diganti.</b> Nomor yang dihasilkan hanya sementara — ganti dengan nomor sebenarnya.</div>
+  <label>Jarak antar sinyal blok (m)<input id="so-blok" type="number" min="200" step="50" value="1200" required></label>
+  <label>Sinyal masuk, jarak sebelum stasiun (m)<input id="so-masuk" type="number" min="50" step="50" value="400" required></label>
+  <label>Sinyal keluar, jarak setelah stasiun (m)<input id="so-keluar" type="number" min="20" step="10" value="150" required></label>
+  <label>Jumlah aspek<select id="so-aspek"><option value="2">2 indikasi</option><option value="3" selected>3 indikasi</option><option value="4">4 indikasi</option></select></label>
+  <div class="modal-actions"><button type="button" class="ghost" data-close="modal-sgotomatis">Batal</button><button type="submit" class="primary-action">Bangun</button></div>
+</form></div></div>
+
+<script src="js/ttc-model.js"></script>
+<script src="js/ttc-dinamika.js"></script>
+<script src="js/ttc-sinyal.js"></script>
+<script src="js/ttc-blok.js"></script>
+<script src="js/ttc-emplasemen.js"></script>
+<script src="js/ttc-jadwal.js"></script>
+<script src="js/ttc-konflik.js"></script>
+<script src="js/ttc-gapeka.js"></script>
+<script src="js/ttc-ekspor.js"></script>
+<script src="js/ttc-simop.js"></script>
+<script src="js/ttc-ui.js"></script>
 </body>
 </html>
