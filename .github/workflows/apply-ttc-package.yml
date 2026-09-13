@@ -1,0 +1,44 @@
+name: Apply TTC Claude Package
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".ttc-upload/**"
+      - ".github/workflows/apply-ttc-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pasang paket TTC
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! ls .ttc-upload/package.b64.part* >/dev/null 2>&1; then
+            echo "Tidak ada paket upload; selesai."
+            exit 0
+          fi
+          cat .ttc-upload/package.b64.part* > /tmp/ttc-package.b64
+          base64 --decode /tmp/ttc-package.b64 > /tmp/ttc-package.zip
+          unzip -t /tmp/ttc-package.zip
+          unzip -o /tmp/ttc-package.zip -d .
+          rm -rf .ttc-upload
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan."
+            exit 0
+          fi
+          git commit -m "Install Claude TTC complete package [skip ci]"
+          git push origin HEAD:main
