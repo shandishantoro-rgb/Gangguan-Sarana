@@ -128,5 +128,10 @@ global.TTCEkspor = { unduh, daftarWaktuCSV, matriksCSV, konflikCSV, unduhGapekaS
   /* Penyempurnaan simulasi, visual GAPEKA, dan topologi cabang. */
   const visual = document.createElement('script');
   visual.src = 'js/ttc-sim-visual.js';
+  visual.onload = function () {
+    const align = document.createElement('script');
+    align.src = 'js/ttc-sim-alignment-fix.js';
+    document.head.appendChild(align);
+  };
   document.head.appendChild(visual);
 })();
