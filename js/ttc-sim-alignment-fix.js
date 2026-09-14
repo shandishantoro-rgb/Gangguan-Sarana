@@ -100,3 +100,12 @@ let tries = 0;
 })(window);
 
 })(window);
+
+/* Zoom Simulasi dimuat setelah koreksi alignment. */
+(function () {
+  if (document.getElementById('ttc-sim-zoom-loader')) return;
+  const s = document.createElement('script');
+  s.id = 'ttc-sim-zoom-loader';
+  s.src = 'js/ttc-sim-zoom.js';
+  document.head.appendChild(s);
+})();
