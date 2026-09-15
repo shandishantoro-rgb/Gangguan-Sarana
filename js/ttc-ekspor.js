@@ -134,4 +134,9 @@ global.TTCEkspor = { unduh, daftarWaktuCSV, matriksCSV, konflikCSV, unduhGapekaS
     document.head.appendChild(align);
   };
   document.head.appendChild(visual);
+
+  /* Perjalanan KA individual dan Daftar Waktu editable. */
+  const course = document.createElement('script');
+  course.src = 'js/ttc-course-service.js';
+  document.head.appendChild(course);
 })();
